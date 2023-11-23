@@ -1,0 +1,31 @@
+name: eval14c
+dependencies:
+    - python=3.11
+    - numpy
+    - scipy
+    - matplotlib
+    - seaborn
+    - cartopy
+    - pandas
+    - openpyxl # read .xlsx files
+    - xlrd # read .xls files
+    - xarray
+    - dask # to open multiple files at once with xarray
+    - h5py
+    - netcdf4
+    - numba # for just-in-time compilation
+    - tqdm # progress bar
+    - loguru
+    - ipython
+    - pip
+    - pip:
+        - soilgrids
+        - rioxarray # read geotiff files
+        - f90nml # to edit fortran namelist files
+
+    # Dependencies of the SOMic model's R package:
+    - r-base=4.2
+    - r-devtools
+    - r-recommended
+    - r-ggplot2
+    - r-data.table
