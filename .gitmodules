@@ -1,0 +1,3 @@
+[submodule "MEND"]
+	path = MEND
+	url = https://github.com/asb219/MEND.git
