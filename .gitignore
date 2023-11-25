@@ -1,4 +1,5 @@
 .DS_Store
+config.ini
 *.log
 *.csv
 *.xls
