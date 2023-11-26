@@ -47,15 +47,18 @@ class DataFile(File):
 
     def write(self, *args, **kwargs):
         """Write data to file."""
+        logger.debug(f'Writing to file: {self}')
         if self.readonly:
             raise Exception(f'File is not writable: {self}')
         self.savedir.mkdir(parents=True, exist_ok=True)
         try:
-            return self._write(*args, **kwargs)
+            self._write(*args, **kwargs)
         except (KeyboardInterrupt, Exception):
             logger.error(f'Write failed or stopped: {self}')
             self.remove(ask=False, missing_okay=True)
             raise
+        else:
+            logger.debug(f'Wrote to file: {self}')
 
     def _read(self, *args, **kwargs):
         raise NotImplementedError
@@ -97,6 +100,8 @@ class DataFileGroup(FileGroup):
             logger.error(f'Write failed or stopped: {self}')
             self.remove(ask=False, missing_okay=True)
             raise
+        else:
+            logger.debug(f'Wrote to file group: {self}')
 
     def _read(self, *args, **kwargs):
         raise NotImplementedError

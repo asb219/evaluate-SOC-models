@@ -62,7 +62,9 @@ class File(object):
 
     def remove(self, ask=True, missing_okay=False, **kwargs):
         """Remove file. Return `True` if removed, `False` otherwise."""
+        logger.debug(f'Removing file: {self}')
         if not self.exists():
+            logger.debug(f'File does not exist, cannot remove file: {self}')
             if missing_okay:
                 return False
             raise FileNotFoundError(f'Cannot remove nonexistent file: {self}')
@@ -71,7 +73,7 @@ class File(object):
             logger.debug(f'UIN: Do not remove file: {self}')
             return False
         self._remove(**kwargs)
-        logger.info(f'Removed file: {self}')
+        logger.debug(f'Removed file: {self}')
         return True
 
     def _remove(self, **kwargs):
@@ -143,13 +145,15 @@ class FileGroup(object):
         """Paths of the files in the group"""
         return self.files.apply(lambda f: f.path)
 
-    def remove(self, ask=True, missing_okay=False, **kwargs):
+    def remove(self, ask=True, missing_okay=True, **kwargs):
         """Remove all files in the group."""
-        if not self.all_exist():
-            if missing_okay:
-                return False
-            raise Exception(f'Cannot remove nonexistent file group: {self}')
-        return self.files.apply(lambda f: f.remove(ask, True, **kwargs))
+        logger.debug(f'Removing file group: {self}')
+        removed = self.files.apply(lambda f: f.remove(ask, True, **kwargs))
+        n = removed.sum()
+        if not missing_okay and n==0:
+            raise Exception
+        logger.debug(f'Removed {n} files from file group: {self}')
+        return removed
 
     def all_exist(self):
         """Return `True` if all files in the group exist, `False` otherwise."""

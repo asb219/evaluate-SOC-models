@@ -4,6 +4,8 @@ import numpy as np
 import pandas as pd
 import scipy.optimize
 
+from loguru import logger
+
 from evaluate_SOC_models.model_data import ModelEvaluationData
 
 
@@ -34,13 +36,15 @@ class CORPSEData(ModelEvaluationData):
         'bulk': ['MB', 'Ufast', 'Uslow', 'Unecr', 'Pfast', 'Pslow', 'Pnecr']
     }
 
-    def __init__(self, entry_name, site_name, pro_name, spinup=200, # years
-            *, save_pkl=False, save_csv=False, save_xlsx=False):
+    def __init__(self, entry_name, site_name, pro_name,
+            spinup=4000, spinup_from_steady_state=200, # years
+            *, save_pkl=True, save_csv=False, save_xlsx=False):
 
         super().__init__(entry_name, site_name, pro_name,
             save_pkl=save_pkl, save_csv=save_csv, save_xlsx=save_xlsx)
 
         self.spinup = spinup
+        self.spinup_from_steady_state = spinup_from_steady_state
 
 
     def _process_forcing(self):
@@ -99,51 +103,42 @@ class CORPSEData(ModelEvaluationData):
         I = influx_vector(NPP_ag, NPP_bg)
         Fin = 1.0
 
+        # First guess of steady state
+        # Order of pools = MB, Ufast, Uslow, Unecr, Pfast, Pslow, Pnecr
+        steady_state_C_guess = np.array([1]+[100]*6, dtype=np.float64) # gC/m2
+        steady_state_F_guess = np.array([0.95]*7, dtype=np.float64)
+
         # Find steady-state C stocks
         def func(C):
             A = internal_flux_matrix(C, T, W)
             return A.sum(axis=1) + I
-        # 'MB', 'Ufast', 'Uslow', 'Unecr', 'Pfast', 'Pslow', 'Pnecr'
-        x0 = np.array([1] + [100]*6, dtype=np.float64) # gC/m2
-        # bounds = (1e-4, 1e8)
-        # sol = scipy.optimize.least_squares(func, x0, bounds=bounds, ftol=1e-16, xtol=1e-12)
-        # assert sol.success
-        # steady_state_C = sol.x
-        # print(sol)
-        steady_state_C = scipy.optimize.fsolve(func, x0)
-        if any(steady_state_C <= 0):
-            print('uh oh C')
-            bounds = (1e-5, 1e7)
-            sol = scipy.optimize.least_squares(func, x0, bounds=bounds)
-            steady_state_C = sol.x.copy()
-            print(sol)
-
+        steady_state_C, success_C = self._find_steady_state(
+            func, steady_state_C_guess, bounds=(0, 1e7), name='C'
+        )
 
         # Find steady-state fraction modern
-        A = internal_flux_matrix(steady_state_C, T, W)
-        def func(F): # C14stocks without CO214
-            return A.dot(F) + (I * Fin) - (decay14C * steady_state_C * F)
-        # 'MB', 'Ufast', 'Uslow', 'Unecr', 'Pfast', 'Pslow', 'Pnecr'
-        x0 = np.array([0.95]*7, dtype=np.float64)
-        # bounds = (0.1, 1.1)
-        # sol = scipy.optimize.least_squares(func, x0, bounds=bounds)
-        # assert sol.success
-        # steady_state_F = sol.x
-        steady_state_F = scipy.optimize.fsolve(func, x0)
-        if any(steady_state_F <= 0):
-            print('uh oh F')
-            bounds = (0.2, 1.1)
-            sol = scipy.optimize.least_squares(func, x0, bounds=bounds)
-            steady_state_F = sol.x.copy()
-            print(sol)
+        if success_C:
+            A = internal_flux_matrix(steady_state_C, T, W)
+            def func(F):
+                return A.dot(F) + (I * Fin) - (decay14C * steady_state_C * F)
+            steady_state_F, success_F = self._find_steady_state(
+                func, steady_state_F_guess, bounds=(0.1, 1.1), name='F'
+            )
+        else:
+            steady_state_F = None
+            success_F = False
 
         # Spinup
-        C = np.array([1] + [100]*6, dtype=np.float64) # steady_state_C
-        F = np.array([0.95]*7, dtype=np.float64) #steady_state_F
+        C = steady_state_C if success_C else steady_state_C_guess
+        F = steady_state_F if success_F else steady_state_F_guess
         CF = C * F
         forc = preindustrial_forcing[
             ['Tsoil', 'Wsoil', 'NPP_ag', 'NPP_bg', 'Fin']].values
-        for _ in range(self.spinup):
+        if success_C and success_F:
+            spinup_years = self.spinup_from_steady_state
+        else:
+            spinup_years = self.spinup
+        for _ in range(spinup_years):
             for T, W, NPP_ag, NPP_bg, Fin in forc:
                 A = internal_flux_matrix(C, T, W)
                 I = influx_vector(NPP_ag, NPP_bg)

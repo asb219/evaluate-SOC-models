@@ -1,5 +1,10 @@
 .DS_Store
 config.ini
+dump/
+
+*.nml
+*.dat
+*.out
 *.log
 *.csv
 *.xls

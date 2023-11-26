@@ -4,11 +4,12 @@ import pandas as pd
 import scipy.optimize
 from numba import njit
 import f90nml
+from loguru import logger
 
 from data_manager import Data, DataFile, PandasCSVFile
 
 from evaluate_SOC_models.model_data import ModelEvaluationData
-from evaluate_SOC_models.path import SAVEPATH, MENDREPOSITORYPATH
+from evaluate_SOC_models.path import SAVEOUTPUTPATH, MENDREPOSITORYPATH
 
 
 __all__ = ['MENDData']
@@ -172,7 +173,7 @@ class MENDData(ModelEvaluationData):
 
     def __init__(self, entry_name, site_name, pro_name,
             spinup_C=400, spinup_F=1000, auto_remove_iofiles=True,
-            *, save_pkl=False, save_csv=False, save_xlsx=False):
+            *, save_pkl=True, save_csv=False, save_xlsx=False):
 
         super().__init__(entry_name, site_name, pro_name,
             save_pkl=save_pkl, save_csv=save_csv, save_xlsx=save_xlsx)
@@ -196,33 +197,31 @@ class MENDData(ModelEvaluationData):
         }
 
         self.namelist_files = {
-            run: Fortran90NamelistFile(
-                filename=f'namelist_{run}.nml', savedir=self.savedir
-            ) for run in run_types
+            run: Fortran90NamelistFile(self.savedir / f'namelist_{run}.nml')
+            for run in run_types
         }
         self.namelist_files['template'] = Fortran90NamelistFile(
-            filename='MEND_namelist.nml',
-            savedir=MENDREPOSITORYPATH,
-            readonly=True
+            MENDREPOSITORYPATH / 'MEND_namelist.nml', readonly=True
         )
         self.output_files = {
             run: {
                 outfile: MENDOutFile(
-                    filename = self.output_prefix + '_' + outfile + '.out',
-                    savedir = path
+                    path / (self.output_prefix + '_' + outfile + '.out')
                 ) for outfile in ('VAR_hour', 'FLX_hour')
             } for run, path in self.output_path.items()
         }
         self.input_files = {
             run: {
-                'SOIL_INI_template': SoilIniDatFile('SOIL_INI.dat',
-                    MENDREPOSITORYPATH/'userio/inp', readonly=True),
-                'SOIL_INI': SoilIniDatFile('SOIL_INI.dat', path),
-                'Tsoil': MonthlyDatFile('Tsoil.dat', path),
-                'Wsoil': MonthlyDatFile('Wsoil.dat', path),
-                'GPP': MonthlyDatFile('GPP.dat', path),
-                'NHx': MonthlyDatFile('NHx.dat', path),
-                'NOy': MonthlyDatFile('NOy.dat', path)
+                'SOIL_INI_template': SoilIniDatFile(
+                    MENDREPOSITORYPATH/'userio'/'inp'/'SOIL_INI.dat',
+                    readonly=True
+                ),
+                'SOIL_INI': SoilIniDatFile(path/'SOIL_INI.dat'),
+                'Tsoil': MonthlyDatFile(path/'Tsoil.dat'),
+                'Wsoil': MonthlyDatFile(path/'Wsoil.dat'),
+                'GPP': MonthlyDatFile(path/'GPP.dat'),
+                'NHx': MonthlyDatFile(path/'NHx.dat'),
+                'NOy': MonthlyDatFile(path/'NOy.dat')
             } for run, path in self.input_path.items()
         }
 
@@ -259,41 +258,41 @@ class MENDData(ModelEvaluationData):
         return self['forcing']
 
 
-    def _run(self, run, printf=lambda x: print(x), force=True,
+    def _run(self, run, force=True,
             read_VAR_hour=True, read_FLX_hour=True,
             read_VAR_hour_kwargs={}, read_FLX_hour_kwargs={},
             remove_files=True
         ):
 
-        prefix = run.upper() + ' : '
-        loginfo = lambda x: logger.info(prefix + x)
+        loginfo = lambda x: logger.info(self._log_message(run, x))
+        logdebug = lambda x: logger.debug(self._log_message(run, x))
 
         output_files = self.output_files[run]
 
         if force or not output_files['VAR_hour'].exists():
-            loginfo('Write namelist file')
+            logdebug('Write namelist file')
             self._write_namelist(run)
-            loginfo('Write input files')
+            logdebug('Write input files')
             self._write_input(run)
             loginfo('Executing MEND...')
             self._execute_mend(run)
         else:
-            printf('MEND output already exists, do not re-run')
+            logdebug('MEND output already exists, do not re-run')
 
         if read_VAR_hour:
-            loginfo('Read VAR_hour output file')
+            logdebug('Read VAR_hour output file')
             VAR_hour = output_files['VAR_hour'].read(**read_VAR_hour_kwargs)
         else:
             VAR_hour = None
 
         if read_FLX_hour:
-            loginfo('Read FLX_hour output file')
+            logdebug('Read FLX_hour output file')
             FLX_hour = output_files['FLX_hour'].read(**read_FLX_hour_kwargs)
         else:
             FLX_hour = None
 
         if remove_files:
-            loginfo('Remove MEND input and output files')
+            logdebug('Remove MEND input and output files')
             for file_path in self.output_path[run].glob('*'):
                 file_path.unlink()
             self.output_path[run].rmdir()
@@ -312,7 +311,7 @@ class MENDData(ModelEvaluationData):
             remove_files=self._auto_remove_iofiles
         )
         initial_state = VAR_hour.iloc[-1]
-        logger.success(run.upper() + ' : ' + 'Done')
+        logger.success(self._log_message(run, 'Done'))
         return initial_state
 
 
@@ -325,7 +324,7 @@ class MENDData(ModelEvaluationData):
             remove_files=self._auto_remove_iofiles
         )
 
-        logger.info(run.upper() + ' : ' + 'Produce 14C output')
+        logger.debug(self._log_message(run, 'Produce 14C output'))
 
         TC_all = self._get_TC_all(FLX_hour)
         I_all = self._get_I_all(FLX_hour)
@@ -337,7 +336,7 @@ class MENDData(ModelEvaluationData):
         F = self._integrate_spinup_F(TC_all, I_all, IFin_all, C0, F0, Ncycles)
         initial_F = pd.Series(F, index=self.all_pools)
 
-        logger.success(run.upper() + ' : ' + 'Done')
+        logger.success(self._log_message(run, 'Done'))
 
         return initial_F
 
@@ -376,7 +375,7 @@ class MENDData(ModelEvaluationData):
         # self.VAR_hour = VAR_hour
         # self.FLX_hour = FLX_hour
 
-        logger.info(run.upper() + ' : ' + 'Produce C and 14C output')
+        logger.debug(self._log_message(run, 'Produce C and 14C output'))
 
         TC_all = self._get_TC_all(FLX_hour)
         I_all = self._get_I_all(FLX_hour)
@@ -403,7 +402,7 @@ class MENDData(ModelEvaluationData):
             index = VAR_hour.index
         ).resample('D').mean() # downsample to save on disk space and memory
 
-        logger.success(run.upper() + ' : ' + 'Done')
+        logger.success(self._log_message(run, 'Done'))
 
         return out
 
@@ -674,3 +673,7 @@ class MENDData(ModelEvaluationData):
         if run == 'spinup_C':
             command += ' spinup'
         return subprocess.check_call(command, shell=True)
+
+
+    def _log_message(self, run, message):
+        return f'{self} {run.upper()} : {message}'

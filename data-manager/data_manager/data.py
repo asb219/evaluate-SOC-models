@@ -3,7 +3,6 @@ from pathlib import Path
 
 from loguru import logger
 
-from data_manager.utils import remove_pattern
 from data_manager.file import PandasPickleFile, PandasCSVFile, PandasExcelFile
 from data_manager.file import FileGroup
 
@@ -81,15 +80,15 @@ class Data:
             'pickle': FileGroup({
                 dataset: PandasPickleFile(savedir/(name+'_'+dataset+'.pkl.gz'))
                 for dataset in self.datasets
-            }),
+            }, name=f'Pickle files for {self}'),
             'csv': FileGroup({
                 dataset: PandasCSVFile(savedir/(name+'_'+dataset+'.csv'))
                 for dataset in self.datasets
-            }),
+            }, name=f'CSV files for {self}'),
             'excel': FileGroup({dataset:
                 PandasExcelFile(savedir/(name+'.xlsx'), sheet_name=dataset)
                 for dataset in self.datasets
-            })
+            }, name=f'Excel files for {self}')
         }
         self._file_types = ['pickle', 'csv', 'excel']
 
@@ -169,7 +168,6 @@ class Data:
             if self._auto_save[file_type][dataset]:
                 file = self._file_groups[file_type][dataset]
                 file.write(data)
-                logger.debug(f'Wrote dataset "{dataset}" to file: {file}')
 
         return data
 
@@ -258,7 +256,6 @@ class Data:
                 file = PandasExcelFile(path=path, sheet_name=dataset)
 
         file.write(self.get(dataset), **kwargs)
-        logger.info(f'Wrote dataset "{dataset}" to {file_type} file: {file}')
         return file
 
 
@@ -281,7 +278,7 @@ class Data:
         self.__cache = {}
 
 
-    def purge_savedir(self, pattern=None, ask=True, *, well_behaved=True):
+    def purge_savedir(self, pattern=None, ask=True):
         """Remove files in :py:attr:`savedir`.
         
         Parameters
@@ -302,13 +299,11 @@ class Data:
         if pattern is None:
             for file_group in self._file_groups.values():
                 file_group.remove(ask=ask, missing_okay=True)
-        elif well_behaved:
+        else:
             for file_group in self._file_groups.values():
                 for file in file_group:
                     if fnmatch(file.filename, pattern):
                         file.remove(ask=ask, missing_okay=True)
-        else:
-            remove_pattern(self.savedir, pattern, recursive=True, ask=ask)
 
 
     def __getitem__(self, item):

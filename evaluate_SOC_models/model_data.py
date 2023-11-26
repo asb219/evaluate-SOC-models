@@ -1,10 +1,12 @@
 import pandas as pd
+import scipy.optimize
+from loguru import logger
 
 from data_manager import Data
 
 from evaluate_SOC_models.observed_data import ObservedData
 from evaluate_SOC_models.forcing_data import ForcingData
-from evaluate_SOC_models.path import SAVEPATH
+from evaluate_SOC_models.path import SAVEOUTPUTPATH
 
 
 __all__ = ['ModelEvaluationData']
@@ -28,19 +30,19 @@ class ModelEvaluationData(Data):
 
         assert all(d in self.datasets for d in ModelEvaluationData.datasets)
 
-        model_name = self.model_name
-
-        savedir = SAVEPATH / entry_name / site_name / pro_name / model_name
-        name = model_name.lower()
-        description = 'Model evaluation data for ' + model_name
-        super().__init__(savedir, name, description, **kwargs)
-
         self.entry_name = entry_name
         self.site_name = site_name
         self.pro_name = pro_name
 
         self._forcing = ForcingData(entry_name, site_name, pro_name)
         self._observed = ObservedData(entry_name, site_name, pro_name)
+
+        model_name = self.model_name
+
+        savedir = SAVEOUTPUTPATH / entry_name / site_name / pro_name / model_name
+        name = model_name.lower()
+        description = 'Model evaluation data for ' + model_name
+        super().__init__(savedir, name, description, **kwargs)
 
 
     def _process_forcing(self):
@@ -98,3 +100,64 @@ class ModelEvaluationData(Data):
 
     def _process_error(self):
         return self['predicted'] - self['observed']
+
+
+    def _find_steady_state(self, func, x0, bounds=(None,None), name='C'):
+        """
+        Find a steady state solution `x` such that `func(x) = 0` with
+        first guess `x0`. First try with `scipy.optimize.fsolve(func, x0)`,
+        but if the result is out of bounds, then try again with
+        `scipy.optimize.least_squares(func, x0, bounds=bounds)`.
+        
+        Parameters
+        ----------
+        func
+            function taking a vector as its sole argument and returning
+            a vector of same length
+        x0 : np.ndarray
+            first guess for the steady state solution
+        bounds : (lo, hi), default (None, None)
+            lower and upper bounds the solution vector; `lo` and `hi` can
+            be `None`, scalar, or np.ndarray vector with length of `x0`
+        name : str, default 'C'
+            name of the quantity for which to find a steady state
+        
+        Returns
+        -------
+        x : np.ndarray or None
+            steady state solution vector
+        success : bool
+            whether `x` is a good steady state solution
+        """
+
+        x = scipy.optimize.fsolve(func, x0)
+        lo, hi = bounds
+        success = (lo is None or all(x > lo)) and (hi is None or all(x < hi))
+
+        if not success:
+            logger.debug(
+                f'scipy.optimize.fsolve failed to find steady state'
+                f' of {name} for {self}.'
+                ' Falling back to scipy.optimize.least_squares.'
+            )
+
+            sol = scipy.optimize.least_squares(func, x0, bounds=bounds)
+            x = sol.x
+            success = sol.success
+
+            if not success:
+                logger.warning(
+                    f'scipy.optimize.least_squares failed to find {name}'
+                    f' steady state for {self}.'
+                    f' STATUS: {sol.status}. MESSAGE: {sol.message}'
+                )
+
+        return x, success
+
+
+    def __repr__(self):
+        info = f'("{self.entry_name}", "{self.site_name}", "{self.pro_name}")'
+        return self.__class__.__name__ + info
+
+    def __str__(self):
+        return self.__repr__()

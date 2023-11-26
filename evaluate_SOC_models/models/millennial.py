@@ -10,7 +10,7 @@ from evaluate_SOC_models.model_data import ModelEvaluationData
 __all__ = ['MillennialData']
 
 
-def _derivs_V2_MM(state, parameters, forcing, spinup=False):
+def derivs_V2_MM(state, parameters, forcing, spinup=False):
     """ Most of the code and comments in this method are taken from
     https://github.com/rabramoff/Millennial/blob/v2/R/models/derivs_V2_MM.R
 
@@ -262,13 +262,15 @@ class MillennialData(ModelEvaluationData):
         'param_pb': 0.5
     })
 
-    def __init__(self, entry_name, site_name, pro_name, spinup=200, # years
-            *, save_pkl=False, save_csv=False, save_xlsx=False):
+    def __init__(self, entry_name, site_name, pro_name,
+            spinup=3000, spinup_from_steady_state=200, # years
+            *, save_pkl=True, save_csv=False, save_xlsx=False):
 
         super().__init__(entry_name, site_name, pro_name,
             save_pkl=save_pkl, save_csv=save_csv, save_xlsx=save_xlsx)
 
         self.spinup = spinup
+        self.spinup_from_steady_state = spinup_from_steady_state
 
 
     def _process_forcing(self):
@@ -307,43 +309,52 @@ class MillennialData(ModelEvaluationData):
         forc_Fin = 1.0
         forc = (forc_st, forc_sw, forc_npp, forc_Fin)
 
-        # Find steady-state C stocks
-        def fun(Cstocks): # Cstocks without CO2
-            state = np.append(Cstocks, [0]*7)
-            return _derivs_V2_MM(state, parameters, forc, True)[:5]
-        # POM, LMWC, AGG, MIC, MAOM
-        x0 = np.array([100, 10, 100, 10, 100], dtype=np.float64) # gC/m2
-        bounds = (1e-4, 1e8)
-        sol = scipy.optimize.least_squares(fun, x0, bounds=bounds)
-        assert sol.success
-        steady_state_C = sol.x
+        # First guess of steady state
+        # Order of pools: POM, LMWC, AGG, MIC, MAOM
+        steady_state_C_guess = np.array([100,10,100,10,100], np.float64) # gC/m2
+        steady_state_F_guess = 0.95 + np.zeros(5, np.float64)
 
-        # Find steady-state 14C stocks
-        def fun(C14stocks): # C14stocks without CO214
-            state = np.concatenate([steady_state_C, [0], C14stocks, [0]])
-            return _derivs_V2_MM(state, parameters, forc, True)[6:-1]
-        # POM14, LMWC14, AGG14, MIC14, MAOM14
-        x0 = steady_state_C * 0.95
-        bounds = (steady_state_C * 0.1, steady_state_C * 1.1)
-        sol = scipy.optimize.least_squares(fun, x0, bounds=bounds)
-        assert sol.success
-        steady_state_C14 = sol.x
+        # Find steady-state C stocks
+        def func(Cstocks):
+            state = np.append(Cstocks, [0]*7) # append CO2 and C14
+            return derivs_V2_MM(state, parameters, forc, True)[:5]
+        steady_state_C, success_C = self._find_steady_state(
+            func, steady_state_C_guess, bounds=(0, 1e7), name='C'
+        )
+
+        # Find steady-state fraction modern
+        if success_C:
+            def func(F):
+                C14stocks = F * steady_state_C # C14stocks without CO214
+                state = np.concatenate([steady_state_C, [0], C14stocks, [0]])
+                deriv = derivs_V2_MM(state, parameters, forc, True)[6:-1]
+                return deriv / steady_state_C
+            steady_state_F, success_F = self._find_steady_state(
+                func, steady_state_F_guess, bounds=(0.1, 1.1), name='F'
+            )
+        else:
+            steady_state_F = None
+            success_F = False
 
         # Spinup
-        initial_C = np.append(steady_state_C, 0) # append CO2
-        initial_C14 = np.append(steady_state_C14, 0) # append CO214
-        state = np.append(initial_C, initial_C14)
+        C = steady_state_C if success_C else steady_state_C_guess
+        F = steady_state_F if success_F else steady_state_F_guess
+        state = np.concatenate([C, [0], C * F, [0]])
         forc = preindustrial_forcing[['Tsoil', 'Wsoil', 'NPP', 'Fin']].values
-        for _ in range(self.spinup):
+        if success_C and success_F:
+            spinup_years = self.spinup_from_steady_state
+        else:
+            spinup_years = self.spinup
+        for _ in range(spinup_years):
             for forc_i in forc:
-                state += _derivs_V2_MM(state, parameters, forc_i, True)
+                state += derivs_V2_MM(state, parameters, forc_i, True)
 
         # Real run
         save = np.empty((len(forcing), len(state)), dtype=np.float64)
         save[0] = state # initial state
         forc = forcing[['Tsoil', 'Wsoil', 'NPP', 'Fin']].values
         for i, forc_i in enumerate(forc[:-1]):
-            state += _derivs_V2_MM(state, parameters, forc_i)
+            state += derivs_V2_MM(state, parameters, forc_i)
             save[i+1] = state
 
         times = forcing.index

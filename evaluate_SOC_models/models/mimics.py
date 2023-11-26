@@ -361,14 +361,14 @@ def FXEQ(state, Fm_input,
 
 
 @njit
-def mimics_spinup(spinup_years, forc, average_annual_NPP_C,
-        initial_state, Fm_input, Inputs,
+def mimics_spinup(spinup_years, forc, NPP_mean,
+        initial_state, Inputs,
         VMAX, KM, CUE, fPHYS, fCHEM, fAVAI, FI, turnover, desorb,
         KO, NUE, CN_m, CN_s, CN_r, CN_K, Nleak, densDep):
     state = initial_state.copy()
     for _ in range(spinup_years):
         for Fm_input, NPP in forc:
-            Inputs_t = Inputs * NPP / average_annual_NPP_C
+            Inputs_t = Inputs * NPP / NPP_mean
             state += FXEQ(state, Fm_input, Inputs_t,
                 VMAX, KM, CUE, fPHYS, fCHEM, fAVAI, FI, turnover, desorb,
                 KO, NUE, CN_m, CN_s, CN_r, CN_K, Nleak, densDep)
@@ -376,15 +376,15 @@ def mimics_spinup(spinup_years, forc, average_annual_NPP_C,
 
 
 @njit
-def mimics_realrun(forc, average_annual_NPP_C,
-        initial_state, Fm_input, Inputs,
+def mimics_realrun(forc, NPP_mean,
+        initial_state, Inputs,
         VMAX, KM, CUE, fPHYS, fCHEM, fAVAI, FI, turnover, desorb,
         KO, NUE, CN_m, CN_s, CN_r, CN_K, Nleak, densDep):
     state = initial_state.copy()
     save = np.empty((len(forc), len(initial_state)), dtype=np.float64)
     save[0] = state
     for i, (Fm_input, NPP) in enumerate(forc[:-1]):
-        Inputs_t = Inputs * NPP / average_annual_NPP_C
+        Inputs_t = Inputs * NPP / NPP_mean
         state += FXEQ(state, Fm_input, Inputs_t,
             VMAX, KM, CUE, fPHYS, fCHEM, fAVAI, FI, turnover, desorb,
             KO, NUE, CN_m, CN_s, CN_r, CN_K, Nleak, densDep)
@@ -417,20 +417,22 @@ class MIMICSData(ModelEvaluationData):
         'bulk': ['MIC_1', 'MIC_2', 'SOM_1', 'SOM_2', 'SOM_3']
     }
 
-    def __init__(self, entry_name, site_name, pro_name, spinup=200, # years
-            *, save_pkl=False, save_csv=False, save_xlsx=False):
+    def __init__(self, entry_name, site_name, pro_name,
+            spinup=4000, spinup_from_steady_state=200, # years
+            *, save_pkl=True, save_csv=False, save_xlsx=False):
 
         super().__init__(entry_name, site_name, pro_name,
             save_pkl=save_pkl, save_csv=save_csv, save_xlsx=save_xlsx)
 
         self.spinup = spinup
+        self.spinup_from_steady_state = spinup_from_steady_state
 
 
     def _process_forcing(self):
         forcing = self._forcing['dynamic'][
             ['Tsoil', 'Wsoil', 'NPP', 'Delta14Clit']
         ].copy()
-        forcing['Tsoil'] -= 273.15
+        forcing['Tsoil'] -= 273.15 # Kelvin -> Celsius
         forcing['NPP'] *= 365*24*60*60 # gC/m2/s -> gC/m2/year
         forcing['Fin'] = forcing['Delta14Clit'] / 1000 + 1
         forcing = forcing.drop(columns=['Delta14Clit'])
@@ -440,7 +442,26 @@ class MIMICSData(ModelEvaluationData):
 
     def _process_constant_forcing(self):
         cforc = super()._process_constant_forcing()
-        cforc['CNlit'] = self._forcing['dynamic']['CNlit'].mean()
+        cforc['CNlit_mean'] = self._forcing['dynamic']['CNlit'].mean()
+        cforc['NPP_mean'] = self._forcing['dynamic']['NPP'].mean()
+        cforc['NPP_mean'] *= 365*24*60*60 # gC/m2/s -> gC/m2/year
+        cforc['Tsoil_mean'] = self._forcing['dynamic']['Tsoil'].mean()
+        cforc['Tsoil_mean'] -= 273.15 # Kelvin -> Celsius
+
+        # Lignin content of litter input in grassland
+        # from Armstrong et al. (1950) DOI: 10.1017/S002185960004555X
+        # Lignin content of litter input in shrubland and forests
+        # from Rahman et al. (2013), DOI: 10.1080/02757540.2013.790380
+        land_cover = cforc['pro_land_cover']
+        if land_cover in ('rangeland/grassland', 'cultivated'):
+            cforc['input_lignin_pct'] = 9.
+        elif land_cover == 'shrubland':
+            cforc['input_lignin_pct'] = 7.
+        elif land_cover == 'forest':
+            cforc['input_lignin_pct'] = 25.
+        else:
+            raise NotImplementedError(f'Run MIMICS on {land_cover} landscape')
+
         return cforc
 
 
@@ -450,71 +471,61 @@ class MIMICSData(ModelEvaluationData):
         forcing = self['forcing']
         preindustrial_forcing = self['preindustrial_forcing']
 
-        average_annual_NPP_C = forcing.NPP.mean()
-
-        # Lignin content of litter input in grassland
-        # from Armstrong et al. (1950) DOI: 10.1017/S002185960004555X
-        if cforc.pro_land_cover in ('rangeland/grassland', 'cultivated'):
-            input_lignin_pct = 9.
-        elif cforc.pro_land_cover == 'shrubland':
-            input_lignin_pct = 7.
-        else: # 'forest' and others
-            input_lignin_pct = 25.
-        # Lignin content of litter input in shrubland and forests
-        # from Rahman et al. (2013), DOI: 10.1080/02757540.2013.790380
-
-        input_CN = cforc['CNlit'] # 37.
-
         parameters = get_parameters(
-            annual_NPP_C = average_annual_NPP_C,
-            clay_pct = cforc.clay,
-            Tsoil = forcing.Tsoil.mean(),
-            input_lignin_pct = input_lignin_pct,
-            input_CN = input_CN,
+            annual_NPP_C = cforc['NPP_mean'],
+            clay_pct = cforc['clay'],
+            Tsoil = cforc['Tsoil_mean'],
+            input_lignin_pct = cforc['input_lignin_pct'],
+            input_CN = cforc['CNlit_mean'],
         )
 
         (Inputs, VMAX, KM, CUE, fPHYS, fCHEM, fAVAI, FI, turnover, desorb,
         KO, NUE, CN_m, CN_s, CN_r, CN_K, Nleak, densDep) = parameters
 
+        # First guess of steady state
+        steady_state_C_N_guess = initialize_pools()[:-7]
+        steady_state_F_guess = 0.95 + np.zeros(7, np.float64)
+
         # Find steady-state C and N stocks
         def func(state_C_N):
             state = np.append(state_C_N, [0]*7)
             return FXEQ(state, 1.0, *parameters)[:-7]
+        steady_state_C_N, success_C_N = self._find_steady_state(
+            func, steady_state_C_N_guess, bounds=(0, 1e7), name='C,N'
+        )
 
-        state = initialize_pools()
-        x0 = state[:-7]
-        state_C_N = scipy.optimize.fsolve(func, x0)
-        if any(state_C_N <= 0):
-            bounds = (1e-3, 1e3)
-            sol = scipy.optimize.least_squares(func, x0, bounds=bounds)
-            state_C_N = sol.x.copy()
-
-        # Find steady-state 14C
-        def func(state_Fm):
-            state = np.append(state_C_N, state_C_N[:7] * state_Fm)
-            return FXEQ(state, 1.0, *parameters)[-7:]
-
-        x0 = 0.95 * state_C_N[:7] #np.ones(7, np.float64)
-        state_Fm = scipy.optimize.fsolve(func, x0)
-        if any(state_Fm <= 0.2) or any(state_Fm >= 1.1):
-            bounds = (0.2, 1.1)
-            sol = scipy.optimize.least_squares(func, x0, bounds=bounds)
-            state_Fm = sol.x.copy()
-        #state_Fm = np.ones(7, np.float64) - 0.05
-
-        steady_state = np.append(state_C_N, state_C_N[:7] * state_Fm)
+        # Find steady-state fraction modern
+        if success_C_N:
+            steady_state_C = steady_state_C_N[:7]
+            def func(F):
+                state = np.append(steady_state_C_N, steady_state_C * F)
+                deriv = FXEQ(state, 1.0, *parameters)[-7:]
+                return deriv / steady_state_C
+            steady_state_F, success_F = self._find_steady_state(
+                func, steady_state_F_guess, bounds=(0.1, 1.1), name='F'
+            )
+        else:
+            steady_state_F = None
+            success_F = None
 
         # Spinup
+        C_N = steady_state_C_N if success_C_N else steady_state_C_N_guess
+        F = steady_state_F if success_F else steady_state_F_guess
+        state = np.append(C_N, C_N[:7] * F)
         forc = preindustrial_forcing[['Fin', 'NPP']].values
-        state = mimics_spinup(self.spinup, forc, average_annual_NPP_C,
-            steady_state, Fm_input, Inputs,
+        if success_C_N and success_F:
+            spinup_years = self.spinup_from_steady_state
+        else:
+            spinup_years = self.spinup
+        state = mimics_spinup(spinup_years, forc, cforc['NPP_mean'],
+            state, Inputs,
             VMAX, KM, CUE, fPHYS, fCHEM, fAVAI, FI, turnover, desorb,
             KO, NUE, CN_m, CN_s, CN_r, CN_K, Nleak, densDep)
 
         # Real run
         forc = forcing[['Fin', 'NPP']].values
-        save = mimics_realrun(forc, average_annual_NPP_C,
-            steady_state, Fm_input, Inputs,
+        save = mimics_realrun(forc, cforc['NPP_mean'],
+            state, Inputs,
             VMAX, KM, CUE, fPHYS, fCHEM, fAVAI, FI, turnover, desorb,
             KO, NUE, CN_m, CN_s, CN_r, CN_K, Nleak, densDep)
 

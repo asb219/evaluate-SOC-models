@@ -7,7 +7,7 @@ from evaluate_SOC_models.observed_data import SelectedISRaDData
 from evaluate_SOC_models.data_sources import \
     SoilGridsPointData, CESM2LEOutputData, ISIMIP2aNitrogenDepositionData
 
-from evaluate_SOC_models.path import SAVEPATH
+from evaluate_SOC_models.path import SAVEOUTPUTPATH, SAVEALLDATAPATH
 
 
 __all__ = ['AllConstantForcingData', 'ForcingData']
@@ -19,7 +19,7 @@ class AllConstantForcingData(Data):
 
     def __init__(self, *, save_pkl=False, save_csv=False, save_xlsx=False):
 
-        savedir = SAVEPATH / 'data'
+        savedir = SAVEALLDATAPATH / 'data'
         name = 'all_constant_forcing'
         description = ('Constant forcing data from ISRaD and SoilGrids')
 
@@ -59,7 +59,7 @@ class ForcingData(Data):
     def __init__(self, entry_name, site_name, pro_name, *,
             save_pkl=True, save_csv=False, save_xlsx=False):
 
-        savedir = SAVEPATH / entry_name / site_name / pro_name / 'data'
+        savedir = SAVEOUTPUTPATH / entry_name / site_name / pro_name / 'data'
         name = 'forcing'
         description = ('')
 
