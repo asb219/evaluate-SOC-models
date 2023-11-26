@@ -118,10 +118,10 @@ class SOMicData(ModelEvaluationData):
         idx0 = all_data.index[0]
 
         # Set initial condition of 1 MgC/ha for carbon stocks of all pools
-        all_data.loc[idx0, ['spm', 'ipm', 'doc', 'mb', 'mac']] = 1
+        all_data.loc[idx0, ['spm', 'ipm', 'doc', 'mb', 'mac']] = 1.
 
         # Set initial condition of -25 permille for d13C of all pools
-        all_data.loc[idx0, 'soc.d13c'] = -25
+        all_data.loc[idx0, 'soc.d13c'] = -25.
 
         return all_data
 
@@ -185,7 +185,7 @@ class SOMicData(ModelEvaluationData):
         all_data = dforc.rename(columns={'Tsoil': 'temp', 'Wsoil': 'h2o'})
 
         # Fill carbon pools with 0 MgC/ha
-        all_data[['spm', 'ipm', 'doc', 'mb', 'mac', 'soc']] = 0
+        all_data[['spm', 'ipm', 'doc', 'mb', 'mac', 'soc']] = 0.
 
         # Partition inputs according to section 1.2 of supplement
         land_cover = cforc['pro_land_cover']
@@ -204,9 +204,9 @@ class SOMicData(ModelEvaluationData):
         NPP = dforc['NPP'] * 1e-6 * 100**2 * (30*24*60*60)
         all_data['added.ipm'] = NPP / (1 + spm_ipm_ratio)
         all_data['added.spm'] = NPP * spm_ipm_ratio / (1 + spm_ipm_ratio)
-        all_data['added.mb'] = 0
-        all_data['added.mac'] = 0
-        all_data['added.doc'] = 0
+        all_data['added.mb'] = 0.
+        all_data['added.mac'] = 0.
+        all_data['added.doc'] = 0.
 
         # Rate modifying factor for temperature from eq 3 in supplement
         ft = 4.99 ; Tmax = 45. ; Topt = 35.
@@ -217,8 +217,8 @@ class SOMicData(ModelEvaluationData):
         all_data['c'] = np.where(all_data['cover'], 0.6, 1.)
 
         # Set constant d13C for carbon input, and set initial state of SOC d13C
-        all_data['added.d13c'] = -25
-        all_data['soc.d13c'] = -25
+        all_data['added.d13c'] = -25.
+        all_data['soc.d13c'] = -25.
 
         # Set 14C age of carbon input
         input_F14C = dforc['Delta14Clit'] / 1000 + 1
@@ -229,7 +229,7 @@ class SOMicData(ModelEvaluationData):
             all_data['add_14c'] = input_age
 
         # Set DOC leaching velocity to zero
-        all_data['velocity'] = 0 # that's what Woolf & Lehmann (2019) did too
+        all_data['velocity'] = 0. # that's what Woolf & Lehmann (2019) did too
 
         # Transform time into an integer and add it as a column
         if not is_spinup:
@@ -238,7 +238,7 @@ class SOMicData(ModelEvaluationData):
         all_data = all_data.reset_index('time')
 
         # Set values of required but unused columns ('cover' is already set)
-        all_data[['atsmd', 'precip', 'pet']] = 0
+        all_data[['atsmd', 'precip', 'pet']] = 0.
 
         columns = required_columns + required_but_unused_columns
 

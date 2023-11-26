@@ -12,3 +12,4 @@ from evaluate_SOC_models.model_data import *
 from evaluate_SOC_models.forcing_data import *
 from evaluate_SOC_models.observed_data import *
 from evaluate_SOC_models.data_sources import *
+import evaluate_SOC_models.plots

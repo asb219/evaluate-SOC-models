@@ -264,8 +264,8 @@ class MENDData(ModelEvaluationData):
             remove_files=True
         ):
 
-        loginfo = lambda x: logger.info(self._log_message(run, x))
-        logdebug = lambda x: logger.debug(self._log_message(run, x))
+        loginfo = lambda x: self._loginfo(run, x)
+        logdebug = lambda x: self._logdebug(run, x)
 
         output_files = self.output_files[run]
 
@@ -311,7 +311,7 @@ class MENDData(ModelEvaluationData):
             remove_files=self._auto_remove_iofiles
         )
         initial_state = VAR_hour.iloc[-1]
-        logger.success(self._log_message(run, 'Done'))
+        self._loginfo(run, 'Done')
         return initial_state
 
 
@@ -324,7 +324,7 @@ class MENDData(ModelEvaluationData):
             remove_files=self._auto_remove_iofiles
         )
 
-        logger.debug(self._log_message(run, 'Produce 14C output'))
+        self._logdebug(run, 'Produce 14C output')
 
         TC_all = self._get_TC_all(FLX_hour)
         I_all = self._get_I_all(FLX_hour)
@@ -336,7 +336,7 @@ class MENDData(ModelEvaluationData):
         F = self._integrate_spinup_F(TC_all, I_all, IFin_all, C0, F0, Ncycles)
         initial_F = pd.Series(F, index=self.all_pools)
 
-        logger.success(self._log_message(run, 'Done'))
+        self._loginfo(run, 'Done')
 
         return initial_F
 
@@ -375,7 +375,7 @@ class MENDData(ModelEvaluationData):
         # self.VAR_hour = VAR_hour
         # self.FLX_hour = FLX_hour
 
-        logger.debug(self._log_message(run, 'Produce C and 14C output'))
+        self._logdebug(run, 'Produce C and 14C output')
 
         TC_all = self._get_TC_all(FLX_hour)
         I_all = self._get_I_all(FLX_hour)
@@ -402,7 +402,7 @@ class MENDData(ModelEvaluationData):
             index = VAR_hour.index
         ).resample('D').mean() # downsample to save on disk space and memory
 
-        logger.success(self._log_message(run, 'Done'))
+        self._loginfo(run, 'Done')
 
         return out
 
@@ -675,5 +675,8 @@ class MENDData(ModelEvaluationData):
         return subprocess.check_call(command, shell=True)
 
 
-    def _log_message(self, run, message):
-        return f'{self} {run.upper()} : {message}'
+    def _loginfo(self, run, message):
+        logger.info(f'{self} {run.upper()} : {message}')
+
+    def _logdebug(self, run, message):
+        logger.debug(f'{self} {run.upper()} : {message}')

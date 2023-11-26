@@ -352,23 +352,23 @@ class CESM2LEOutputData(Data):
         lyr_bounds = np.array( reduce(lambda bounds,midpoint:
             bounds+[2*midpoint-bounds[-1]], levgrnd, [0]) )
 
-        # Heights of the soil depth layers
-        lyr_heights = lyr_bounds[1:] - lyr_bounds[:-1]
+        # Thicknesses of the soil depth layers
+        lyr_thicknesses = lyr_bounds[1:] - lyr_bounds[:-1]
 
         # # Bounds and heights of the soil depth layers
-        # bound = 0; lyr_bounds = [0]; lyr_heights = []
+        # bound = 0; lyr_bounds = [0]; lyr_thicknesses = []
         # for midpoint in levgrnd:
-        #     height = 2 * (midpoint-bound)
-        #     bound += height
+        #     thickness = 2 * (midpoint-bound)
+        #     bound += thickness
         #     lyr_bounds.append(bound)
-        #     lyr_heights.append(height)
+        #     lyr_thicknesses.append(thickness)
 
         # Choose layers whose midpoint is between top and bot
         selected_depth_indices = [
             i for i,d in enumerate(levgrnd)
             if d>top/100 and d<bot/100
         ]
-        selected_heights = lyr_heights[selected_depth_indices]
+        selected_lyr_thicknesses = lyr_thicknesses[selected_depth_indices]
         #selected_levgrnd = levgrnd[selected_depth_indices]
         #selected_levsoi = levsoi[selected_depth_indices]
 
@@ -382,7 +382,7 @@ class CESM2LEOutputData(Data):
 
         # Take the average of the variable over the selected depth layers
         weights = xr.DataArray(
-            selected_heights / selected_heights.sum(),
+            selected_lyr_thicknesses / selected_lyr_thicknesses.sum(),
             coords={depth_dim: da[depth_dim].values}, dims=depth_dim
         )
         da = da.weighted(weights).mean(dim=depth_dim)

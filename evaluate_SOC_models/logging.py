@@ -116,8 +116,8 @@ def enable_logfile_logging():
         opener=lambda file, flags: os.open(file, flags, 0o600),
         backtrace=True, # for when logger.exception is used
         enqueue=True, # for compatibility with multiprocessing
-        rotation="200 KB",
-        retention="90 days"
+        rotation="500 KB",
+        retention="30 days"
     )
     logger.success('logfile logging enabled')
 
