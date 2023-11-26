@@ -13,7 +13,7 @@ def _save_show_close(plot_function):
             path = Path(save).expanduser().resolve()
             path.parent.mkdir(parents=True, exist_ok=True)
             plt.savefig(path, dpi=dpi)
-            logger.success(f'Saved figure to "{path}".')
+            logger.debug(f'Saved figure to "{path}".')
         if show:
             plt.show()
         elif close:

@@ -62,11 +62,11 @@ class File(object):
 
     def remove(self, ask=True, missing_okay=False, **kwargs):
         """Remove file. Return `True` if removed, `False` otherwise."""
-        logger.debug(f'Removing file: {self}')
+        #logger.debug(f'Removing file: {self}')
         if not self.exists():
-            logger.debug(f'File does not exist, cannot remove file: {self}')
             if missing_okay:
                 return False
+            #logger.debug(f'File does not exist, cannot remove file: {self}')
             raise FileNotFoundError(f'Cannot remove nonexistent file: {self}')
         if ask and not yes_no_question(f'Remove file "{self}"?'):
             print('Do not remove.')
@@ -147,7 +147,7 @@ class FileGroup(object):
 
     def remove(self, ask=True, missing_okay=True, **kwargs):
         """Remove all files in the group."""
-        logger.debug(f'Removing file group: {self}')
+        #logger.debug(f'Removing file group: {self}')
         removed = self.files.apply(lambda f: f.remove(ask, True, **kwargs))
         n = removed.sum()
         if not missing_okay and n==0:

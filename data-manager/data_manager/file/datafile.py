@@ -47,7 +47,6 @@ class DataFile(File):
 
     def write(self, *args, **kwargs):
         """Write data to file."""
-        logger.debug(f'Writing to file: {self}')
         if self.readonly:
             raise Exception(f'File is not writable: {self}')
         self.savedir.mkdir(parents=True, exist_ok=True)
