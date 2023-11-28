@@ -12,8 +12,15 @@ from evaluate_SOC_models.data_sources import Graven2017CompiledRecordsData
 from .utils import _save_show_close
 
 
+__all__ = [
+    'plot_israd_map',
+    'plot_israd_timeseries',
+    'plot_israd_boxplot'
+]
+
+
 @_save_show_close
-def plot_map(projection='Miller', plot_MAT=True, plot_clay=True):
+def plot_israd_map(projection='Miller', plot_MAT=True, plot_clay=True):
 
     figwidth = 6
     figheight = 3
@@ -95,7 +102,7 @@ def plot_map(projection='Miller', plot_MAT=True, plot_clay=True):
 
 
 @_save_show_close
-def plot_timeseries(figsize=(4,3.5)):
+def plot_israd_timeseries(figsize=(4,3.5)):
     markersize = 8 #5
     markers = {
         'bulk_14c': dict(
@@ -161,7 +168,7 @@ def plot_timeseries(figsize=(4,3.5)):
 
 
 @_save_show_close
-def plot_boxplot():
+def plot_israd_boxplot():
     data = SelectedISRaDData()['data'][['bulk_14c', 'LF_14c', 'HF_14c']]
     labels = ['total SOC', 'light\nfraction', 'heavy\nfraction']
     fig = plt.figure(figsize=(4,4))

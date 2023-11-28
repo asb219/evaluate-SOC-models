@@ -58,6 +58,7 @@ def _plot_boxplots(variables, predicted=None, observed=None):
 
         if variable.endswith('14c'):
             ax.axhline(0, zorder=-10, color='k', alpha=0.5, lw=0.8)
+            ax.set_ylim((-100, None))
 
         elif variable.endswith('perc'):
             ax.set_ylim((0,100))

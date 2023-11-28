@@ -20,6 +20,5 @@ SAVEPATH = RESULTSPATH / \
     f'topsoil_min{TOPSOIL_MIN_DEPTH}cm_max{TOPSOIL_MAX_DEPTH}cm_depth'
 SAVEOUTPUTPATH = SAVEPATH / 'model-output'
 SAVEALLDATAPATH = SAVEPATH / 'all-data'
-SAVEPLOTSPATH = SAVEPATH / 'plots'
 
 del config, absolute_path

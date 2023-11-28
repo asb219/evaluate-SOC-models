@@ -11,25 +11,31 @@ Evaluated models:
 
 
 [^1]: Abramoff, R. Z., et al. (2022). Improved global-scale predictions of soil carbon stocks with Millennial Version 2.
-_Soil Biology and Biochemistry, 164_, 108466. DOI: [10.1016/j.soilbio.2021.108466](https://doi.org/10.1016/j.soilbio.2021.108466)
+_Soil Biology and Biochemistry, 164_, 108466. DOI: [10.1016/j.soilbio.2021.108466](https://doi.org/10.1016/j.soilbio.2021.108466).
+Original source code in [rabramoff/Millennial](https://github.com/rabramoff/Millennial).
 
 [^2]: Woolf, D., & Lehmann, J. (2019). Microbial models with minimal mineral protection can explain long-term soil organic carbon persistence.
-_Scientific Reports, 9_(1), 6522. DOI: [10.1038/s41598-019-43026-8](https://doi.org/10.1038/s41598-019-43026-8)
+_Scientific Reports, 9_(1), 6522. DOI: [10.1038/s41598-019-43026-8](https://doi.org/10.1038/s41598-019-43026-8).
+Original source code in [domwoolf/somic1](https://github.com/domwoolf/somic1).
 
 [^3]: Wang, G., et al. (2022). Soil enzymes as indicators of soil function: A step toward greater realism in microbial ecological modeling.
-_Global Change Biology, 28_(5), 1935–1950. DOI: [10.1111/gcb.16036](https://doi.org/10.1111/gcb.16036)
+_Global Change Biology, 28_(5), 1935–1950. DOI: [10.1111/gcb.16036](https://doi.org/10.1111/gcb.16036).
+Original source code in [wanggangsheng/MEND](https://github.com/wanggangsheng/MEND)
 
-[^4]: This version of CORPSE is available at [bsulman/CORPSE-fire-response](https://github.com/bsulman/CORPSE-fire-response), but not published.
-The CORPSE model was first published in: Sulman, B. N., et al. (2014). Microbe-driven turnover offsets mineral-mediated storage of soil carbon under elevated CO<sub>2</sub>.
-_Nature Climate Change, 4_(12), 1099–1102. DOI: [10.1038/nclimate2436](https://doi.org/10.1038/nclimate2436)
+[^4]: This specific version of CORPSE is not published, but its source code is available on GitHub at [bsulman/CORPSE-fire-response](https://github.com/bsulman/CORPSE-fire-response).
+The CORPSE model was first published in:
+Sulman, B. N., et al. (2014). Microbe-driven turnover offsets mineral-mediated storage of soil carbon under elevated CO<sub>2</sub>.
+_Nature Climate Change, 4_(12), 1099–1102. DOI: [10.1038/nclimate2436](https://doi.org/10.1038/nclimate2436).
 
 [^5]: Kyker-Snowman, E., et al. (2020). Stoichiometrically coupled carbon and nitrogen cycling in the MIcrobial-MIneral Carbon Stabilization model version 1.0 (MIMICS-CN v1.0).
-_Geoscientific Model Development, 13_(9), 4413–4434. DOI: [10.5194/gmd-13-4413-2020](https://doi.org/10.5194/gmd-13-4413-2020)
+_Geoscientific Model Development, 13_(9), 4413–4434. DOI: [10.5194/gmd-13-4413-2020](https://doi.org/10.5194/gmd-13-4413-2020).
+Original source code on Zenodo at [https://zenodo.org/records/3534562](https://zenodo.org/records/3534562).
 
 
 ## Repository contents
 
 * `evaluate_SOC_models`: contains code to run the models and produce the results
+* `produce_all_results.py`: script to run all models and produce plots and tables with results
 * `MEND`: git submodule of [my fork](https://github.com/asb219/MEND) of MEND's original repository [wanggangsheng/MEND](https://github.com/wanggangsheng/MEND)
 * `environment.yml`: specifies required python and R packages
 * `config_defaults.ini`: default config file

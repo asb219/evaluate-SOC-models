@@ -4,6 +4,7 @@ import pandas as pd
 from loguru import logger
 
 from evaluate_SOC_models.observed_data import SelectedISRaDData
+from evaluate_SOC_models.forcing_data import ForcingData
 from evaluate_SOC_models.models import \
     MENDData, MillennialData, SOMicData, CORPSEData, MIMICSData
 
@@ -172,4 +173,6 @@ def get_bias_and_rmse(error=None):
     for model_name, err in error.items():
         bias.loc[:, model_name] = err.mean(axis=0)
         rmse.loc[:, model_name] = np.sqrt((err * err).mean(axis=0))
+    bias['average'] = bias.mean(axis=1)
+    rmse['average'] = rmse.mean(axis=1)
     return bias, rmse
