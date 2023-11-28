@@ -8,7 +8,6 @@ dependencies:
     - cartopy
     - pandas
     - openpyxl # read .xlsx files
-    - xlrd # read .xls files
     - xarray
     - dask # to open multiple files at once with xarray
     - h5py
@@ -16,7 +15,6 @@ dependencies:
     - numba # for just-in-time compilation
     - tqdm # progress bar
     - loguru
-    - ipython
     - pip
     - pip:
         - soilgrids
