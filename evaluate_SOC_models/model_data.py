@@ -2,7 +2,7 @@ import pandas as pd
 import scipy.optimize
 from loguru import logger
 
-from data_manager import Data
+from evaluate_SOC_models.data_manager import Data
 
 from evaluate_SOC_models.observed_data import ObservedData
 from evaluate_SOC_models.forcing_data import ForcingData

@@ -30,8 +30,8 @@ _Geoscientific Model Development, 13_(9), 4413–4434. DOI: [10.5194/gmd-13-4413
 ## Repository contents
 
 * `evaluate_SOC_models`: contains code to run the models and produce the results
-* `MEND`: git submodule of [my fork](https://github.com/asb219/MEND) of the [wanggangsheng/MEND](https://github.com/wanggangsheng/MEND) repository
-* `environment.yml`: contains list of required python and R packages
+* `MEND`: git submodule of [my fork](https://github.com/asb219/MEND) of MEND's original repository [wanggangsheng/MEND](https://github.com/wanggangsheng/MEND)
+* `environment.yml`: specifies required python and R packages
 * `config_defaults.ini`: default config file
 
 [//]: # ( * `dump`: default directory for file storage )
@@ -62,9 +62,9 @@ make
 Then, move back to the main repository's directory with `cd ..`.
 
 
-### Create virtual environment with conda
+### Create conda environment
 
-Create the python and R environment (named `eval14c` by default), and activate it:
+Create this project's python and R environment (named `eval14c` by default) with conda, and activate it:
 ```
 conda env create -f environment.yml
 conda activate eval14c
@@ -74,22 +74,8 @@ If you don't have `conda`, download and install the newest version
 of [Miniconda](https://docs.conda.io/en/latest/miniconda.html) for a lightweight install.
 If you prefer having a graphical user interface, get [Anaconda](https://www.anaconda.com/download/) instead.
 
-[//]: # ( * You can deactivate the virtual environment with `conda deactivate`.)
-[//]: # ( * To install extra packages, activate the environment and run `conda install name-of-package`.)
-[//]: # ( * To update the installed packages, activate the environment and run `conda update --all`.)
 
-
-### Install the `data_manager` package
-
-Install the `data_manager` python package with
-```
-pip install -e data-manager
-```
-
-I should change the structure of my packages to remove this step...
-
-
-### Install the SOMic model's R package
+### Install SOMic
 
 [//]: # ( Make sure that the conda environment `eval14c` is activated. )
 
@@ -100,6 +86,14 @@ Rscript -e "devtools::install_github('asb219/somic1@v1.1-asb219')"
 
 This will install directly from [my fork](https://github.com/asb219/somic1)
 of SOMic's original repository [domwoolf/somic1](https://github.com/domwoolf/somic1).
+
+
+
+## Produce results
+
+
+Coming soon
+
 
 
 ## [_Optional_] Customize configurations
@@ -128,5 +122,3 @@ If you would like to store files in a different location, run the following comm
 ```
 python -m evaluate_SOC_models.config -set-dump "/your/new/path/to/dump"
 ```
-[//]: # ( This will create a custom configuration file `config.ini`, which takes precedence over `config_defaults.ini`. )
-

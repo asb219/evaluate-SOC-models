@@ -4,7 +4,7 @@ import subprocess
 import pandas as pd
 import numpy as np
 
-from data_manager import PandasCSVFile
+from evaluate_SOC_models.data_manager import PandasCSVFile
 from evaluate_SOC_models.model_data import ModelEvaluationData
 
 

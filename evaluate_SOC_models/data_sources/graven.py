@@ -1,8 +1,8 @@
 import pandas as pd
 
-from data_manager.data import Data
-from data_manager.file import Archive, FileFromURL
-from data_manager.file import PandasCSVFile, FileFromArchive
+from evaluate_SOC_models.data_manager.data import Data
+from evaluate_SOC_models.data_manager.file import Archive, FileFromURL
+from evaluate_SOC_models.data_manager.file import PandasCSVFile, FileFromArchive
 
 from evaluate_SOC_models.path import DOWNLOADPATH, DATAPATH
 

@@ -3,8 +3,8 @@ from pathlib import Path
 
 from loguru import logger
 
-from data_manager.file import PandasPickleFile, PandasCSVFile, PandasExcelFile
-from data_manager.file import FileGroup
+from .file import PandasPickleFile, PandasCSVFile, PandasExcelFile
+from .file import FileGroup
 
 
 __all__ = [
@@ -279,16 +279,13 @@ class Data:
 
 
     def purge_savedir(self, pattern=None, ask=True):
-        """Remove files in :py:attr:`savedir`.
+        """Remove files belonging to this instance of :py:class:`Data`.
         
         Parameters
         ----------
         pattern : str, default None
             Pattern of filenames to remove. If `None`, remove all
             files belonging to this instance of :py:class:`Data`.
-            Note that some of those files may be outside of
-            :py:attr:`savedir` if file locations have been
-            customized.
         ask : bool, default True
             Ask for confirmation before removing
         well_behaved : bool, default True

@@ -6,7 +6,7 @@ from numba import njit
 import f90nml
 from loguru import logger
 
-from data_manager import Data, DataFile, PandasCSVFile
+from evaluate_SOC_models.data_manager import Data, DataFile, PandasCSVFile
 
 from evaluate_SOC_models.model_data import ModelEvaluationData
 from evaluate_SOC_models.path import SAVEOUTPUTPATH, MENDREPOSITORYPATH

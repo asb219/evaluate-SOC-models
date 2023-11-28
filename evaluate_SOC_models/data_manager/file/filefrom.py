@@ -10,7 +10,7 @@ from tqdm import tqdm
 
 from loguru import logger
 
-from data_manager.utils import yes_no_question
+from .utils import yes_no_question
 from .basefile import File, FileGroup, Archive
 
 

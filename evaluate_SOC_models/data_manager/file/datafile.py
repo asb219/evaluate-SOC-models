@@ -8,7 +8,6 @@ import rioxarray
 
 from loguru import logger
 
-from data_manager.utils import yes_no_question
 from .basefile import File, FileGroup
 
 

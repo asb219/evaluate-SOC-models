@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from data_manager import Data
+from evaluate_SOC_models.data_manager import Data
 
 from evaluate_SOC_models.observed_data import SelectedISRaDData
 from evaluate_SOC_models.data_sources import \

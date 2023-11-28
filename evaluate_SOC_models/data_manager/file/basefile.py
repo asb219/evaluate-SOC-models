@@ -3,12 +3,11 @@ Basic file types
 """
 
 from pathlib import Path
-import shutil
 from zipfile import ZipFile
 import pandas as pd
 from loguru import logger
 
-from data_manager.utils import yes_no_question
+from .utils import yes_no_question
 
 
 __all__ = ['File', 'FileGroup', 'Archive']
@@ -56,7 +55,7 @@ class File(object):
         self._filename = self._assert_good_filename(path.name)
 
     def _assert_good_filename(self, filename):
-        filename = str(filename).strip()
+        filename = str(filename)
         assert filename and ('/' not in filename) and (filename[0] != '.')
         return filename
 
@@ -152,7 +151,7 @@ class FileGroup(object):
         n = removed.sum()
         if not missing_okay and n==0:
             raise Exception
-        logger.debug(f'Removed {n} files from file group: {self}')
+        logger.debug(f'Removed {n} files of file group: {self}')
         return removed
 
     def all_exist(self):

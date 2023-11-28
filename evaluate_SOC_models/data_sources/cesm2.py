@@ -3,9 +3,9 @@ import numpy as np
 import pandas as pd # barely necessary
 import xarray as xr
 
-from data_manager.data import Data
-from data_manager.file import XarrayNetCDFFile, FileFromURL
-from data_manager.file import XarrayNetCDFFileGroup, FileGroupFromDownload
+from evaluate_SOC_models.data_manager.data import Data
+from evaluate_SOC_models.data_manager.file import XarrayNetCDFFile, FileFromURL
+from evaluate_SOC_models.data_manager.file import XarrayNetCDFFileGroup, FileGroupFromDownload
 
 from evaluate_SOC_models.path import DOWNLOADPATH, DATAPATH
 

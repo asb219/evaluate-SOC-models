@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from data_manager import Data
+from evaluate_SOC_models.data_manager import Data
 
 from evaluate_SOC_models.data_sources import ISRaDData
 from evaluate_SOC_models.path import TOPSOIL_MIN_DEPTH, TOPSOIL_MAX_DEPTH

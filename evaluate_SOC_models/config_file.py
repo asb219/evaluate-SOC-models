@@ -1,7 +1,7 @@
 from pathlib import Path
 from configparser import ConfigParser
 
-from data_manager import DataFile
+from evaluate_SOC_models.data_manager import DataFile
 
 
 __all__ = [

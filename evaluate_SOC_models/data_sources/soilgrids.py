@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 from soilgrids import SoilGrids
 
-from data_manager.data import Data
-from data_manager.file import XarrayGeoTIFFile, FileFromDownload
+from evaluate_SOC_models.data_manager.data import Data
+from evaluate_SOC_models.data_manager.file import XarrayGeoTIFFile, FileFromDownload
 
 from evaluate_SOC_models.path import DOWNLOADPATH, DATAPATH
 
