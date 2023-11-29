@@ -97,42 +97,42 @@ if __name__ == '__main__': # necessary if multiprocessing
     #####################
 
     plot_israd_map(
-        show=False, save=PLOTPATH/'israd_map.png',
-        save_kwargs=dict(dpi=400, bbox_inches='tight')
+        show=False, save=PLOTPATH/'israd_map.pdf',
+        save_kwargs=dict(bbox_inches='tight')
     )
     plot_israd_timeseries(
         figsize=(7,4),
-        show=False, save=PLOTPATH/'israd_timeseries.svg'
+        show=False, save=PLOTPATH/'israd_timeseries.pdf'
     )
 
     plot_boxplots_C(
         predicted=predicted_after_1995, observed=observed_after_1995,
-        show=False, save=PLOTPATH/'results_boxplots_C.svg'
+        show=False, save=PLOTPATH/'results_boxplots_C.pdf'
     )
     plot_boxplots_14C(
         predicted=predicted_after_1995, observed=observed_after_1995,
-        show=False, save=PLOTPATH/'results_boxplots_14C.svg'
+        show=False, save=PLOTPATH/'results_boxplots_14C.pdf'
     )
 
     plot_predicted_vs_clay(
         predicted=predicted_after_1995, observed=observed_after_1995,
-        show=False, save=PLOTPATH/'predicted_vs_clay.svg',
+        show=False, save=PLOTPATH/'predicted_vs_clay.pdf',
         save_kwargs=dict(bbox_inches='tight')
     )
     plot_predicted_vs_temperature(
         predicted=predicted_after_1995, observed=observed_after_1995,
-        show=False, save=PLOTPATH/'predicted_vs_temperature.svg',
+        show=False, save=PLOTPATH/'predicted_vs_temperature.pdf',
         save_kwargs=dict(bbox_inches='tight')
     )
 
     plot_predicted_vs_observed_all_models(
         predicted=predicted, observed=observed,
-        show=False, save=PLOTPATH/'1-to-1_all.svg'
+        show=False, save=PLOTPATH/'1-to-1_all.pdf'
     )
     for model in (MIMICSData, MillennialData, SOMicData, CORPSEData, MENDData):
         plot_predicted_vs_observed(
             model=model, predicted=predicted[model.model_name], observed=observed,
-            show=False, save=PLOTPATH/f'1-to-1_{model.model_name}.svg'
+            show=False, save=PLOTPATH/f'1-to-1_{model.model_name}.pdf'
         )
 
     example_profile = ('Meyer_2012', 'Matsch', 'pasture')
@@ -140,7 +140,7 @@ if __name__ == '__main__': # necessary if multiprocessing
     plot_predicted_14C_all_models(
         profile=example_profile,
         ylim=(-100, 500), t0='1950', t1='2015',
-        show=False, save=PLOTPATH/f'predicted_14C_example_{profile_name}.svg'
+        show=False, save=PLOTPATH/f'predicted_14C_example_{profile_name}.pdf'
     )
 
     models = (MIMICSData, MillennialData, SOMicData, CORPSEData, MENDData)
@@ -151,5 +151,5 @@ if __name__ == '__main__': # necessary if multiprocessing
         for profile in profiles:
             if model is MENDData and profile in MEND_no_14C_profiles:
                 continue
-            save = savepath / ('_'.join(profile) + '.svg')
+            save = savepath / ('_'.join(profile) + '.pdf')
             plot_predicted_14C(model, profile, t0=1945, save=save, show=False)

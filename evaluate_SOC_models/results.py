@@ -189,8 +189,8 @@ def get_bias_and_rmse(error=None):
     bias = pd.DataFrame(columns=SORTED_MODEL_NAMES, index=SORTED_VARIABLE_NAMES, dtype='float')
     rmse = pd.DataFrame(columns=SORTED_MODEL_NAMES, index=SORTED_VARIABLE_NAMES, dtype='float')
     for model_name, err in error.items():
-        bias.loc[:, model_name] = err.mean(axis=0)
-        rmse.loc[:, model_name] = np.sqrt((err * err).mean(axis=0))
+        bias[model_name] = err.mean(axis=0)
+        rmse[model_name] = np.sqrt((err * err).mean(axis=0))
     bias['average'] = bias.mean(axis=1)
     rmse['average'] = rmse.mean(axis=1)
     return bias, rmse
