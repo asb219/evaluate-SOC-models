@@ -135,7 +135,7 @@ if __name__ == '__main__': # necessary if multiprocessing
             show=False, save=PLOTPATH/f'1-to-1_{model.model_name}.pdf'
         )
 
-    example_profile = ('Meyer_2012', 'Matsch', 'pasture')
+    example_profile = ('Meyer_2012', 'Matsch', 'Pasture')
     profile_name = '_'.join(example_profile)
     plot_predicted_14C_all_models(
         profile=example_profile,
