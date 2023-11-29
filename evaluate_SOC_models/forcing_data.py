@@ -17,9 +17,9 @@ class AllConstantForcingData(Data):
 
     datasets = ['data']
 
-    def __init__(self, *, save_pkl=False, save_csv=False, save_xlsx=False):
+    def __init__(self, *, save_pkl=True, save_csv=True, save_xlsx=False):
 
-        savedir = SAVEALLDATAPATH / 'data'
+        savedir = SAVEALLDATAPATH
         name = 'all_constant_forcing'
         description = ('Constant forcing data from ISRaD and SoilGrids')
 

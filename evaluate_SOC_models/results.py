@@ -19,7 +19,6 @@ __all__ = [
 ]
 
 
-#ALL_MODELS = (MENDData, MillennialData, SOMicData, CORPSEData, MIMICSData)
 SORTED_MODEL_NAMES = ['MEND', 'Millennial', 'SOMic', 'CORPSE', 'MIMICS']
 SORTED_VARIABLE_NAMES = ['soc', 'bulk_14c', 'LF_14c', 'HF_14c', 'LF_c_perc', 'HF_c_perc']
 
@@ -31,20 +30,39 @@ def get_all_profiles():
     return SelectedISRaDData().data.index
 
 
-MEND_problematic_profiles = {
+MEND_fails = {
     ('Heckman_2018', 'HI_Andisol', 'WPL1204'), # still doesn't work
-    ('Lemke_2006', 'Solling', 'Solling_DO_F1'), # still doesn't work
-    ('Lemke_2006', 'Solling', 'Solling_DO_F2'), # still doesn't work
-    ('Lemke_2006', 'Solling', 'Solling_DO_F3'), # still doesn't work
     ('McFarlane_2013', 'MA Harvard Forest', 'H4'), # still doesn't work
-    ('McFarlane_2013', 'MI-Coarse UMBS', 'D4'), # now this doesn't work....
-    ('McFarlane_2013', 'MI-Coarse UMBS', 'O2'), # now this doesn't work....
     ('McFarlane_2013', 'MI-Coarse UMBS', 'C7'), # still doesn't work
+    ('McFarlane_2013', 'MI-Coarse UMBS', 'D4'), # now this doesn't work....
     #('McFarlane_2013', 'MI-Coarse UMBS', 'G3'), # WORKS NOW !!!
+    ('McFarlane_2013', 'MI-Coarse UMBS', 'O2'), # now this doesn't work....
     ('Schrumpf_2013', 'Hesse', 'Hesse.1'), # still doesn't work
     #('Schrumpf_2013' 'Laqueuille' 'Laqueuille.1') # WORKS NOW !!!
 }
-
+MEND_runs_at_first_but_then_fails = {
+    ('Lemke_2006', 'Solling', 'Solling_DO_F1'), # still doesn't work
+    ('Lemke_2006', 'Solling', 'Solling_DO_F2'), # still doesn't work
+    ('Lemke_2006', 'Solling', 'Solling_DO_F3'), # still doesn't work
+    ('Rasmussen_2018', 'GRpp', 'GRpp'), # new (negative SOC stocks)
+    ('Rasmussen_2018', 'GRwf', 'GRwf'), # new (negative SOC stocks)
+    ('Schrumpf_2013', 'Norunda', 'Norunda.1') # new (bad C repartition)
+}
+MEND_C_works_but_14C_fails = {
+    ('McFarlane_2013', 'Mi-Fine Colonial Point', 'C1'),
+    ('McFarlane_2013', 'Mi-Fine Colonial Point', 'C4'),
+    ('McFarlane_2013', 'Mi-Fine Colonial Point', 'C5')
+}
+MEND_bad_14C_initial_condition_but_still_runs_nicely_for_the_remaining_time = {
+    ('McFarlane_2013', 'MA Harvard Forest', 'H5'),
+    ('McFarlane_2013', 'NH Bartlett Forest', 'B1'),
+    ('McFarlane_2013', 'NH Bartlett Forest', 'B2'),
+    ('McFarlane_2013', 'NH Bartlett Forest', 'B3'),
+    ('McFarlane_2013', 'NH Bartlett Forest', 'B4'),
+    ('McFarlane_2013', 'NH Bartlett Forest', 'B5'),
+    ('Schrumpf_2013', 'Laqueuille', 'Laqueuille.1')
+}
+MEND_excluded_profiles = MEND_fails | MEND_runs_at_first_but_then_fails
 
 
 def run_model(model, profile):
@@ -75,7 +93,7 @@ def run_model(model, profile):
         logger.error(f'NaN values in the forcing of {m}.')
         success = False
 
-    elif model is MENDData and tuple(profile) in MEND_problematic_profiles:
+    elif model is MENDData and tuple(profile) in MEND_excluded_profiles:
         logger.warning(f'Skipping {m}.')
         success = False
 

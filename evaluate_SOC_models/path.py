@@ -19,6 +19,6 @@ TOPSOIL_MAX_DEPTH = int(config['topsoil']['max_depth'])
 SAVEPATH = RESULTSPATH / \
     f'topsoil_min{TOPSOIL_MIN_DEPTH}cm_max{TOPSOIL_MAX_DEPTH}cm_depth'
 SAVEOUTPUTPATH = SAVEPATH / 'model-output'
-SAVEALLDATAPATH = SAVEPATH / 'all-data'
+SAVEALLDATAPATH = SAVEPATH / 'data'
 
 del config, absolute_path

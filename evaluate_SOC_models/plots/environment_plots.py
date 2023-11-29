@@ -60,7 +60,7 @@ def plot_predicted_vs_environment(environment, predicted=None, observed=None, *,
     options = {
         'soc': dict(
             title='Total SOC stocks',
-            ylabel='SOC stocks (gC/cm$^2$)',
+            ylabel='SOC stocks (kgC/m$^2$)',
             ylim=(None,None)
         ),
         'LF_c_perc': dict(
@@ -114,10 +114,14 @@ def plot_predicted_vs_environment(environment, predicted=None, observed=None, *,
 
     variables = ['soc', 'LF_c_perc', 'HF_c_perc', 'bulk_14c', 'LF_14c', 'HF_14c']
 
-    for ax, variable in zip(axes.flatten(), variables):
+    subplot_labels = iter('('+chr(i)+') ' for i in range(ord('a'), ord('z')))
+
+    for ax, variable, splabel in zip(axes.flatten(), variables, subplot_labels):
 
         # Observed data
         y = observed[variable].dropna()
+        if variable == 'soc':
+            y = y * 10 # gC/cm2 -> kgC/m2
         x = environment[y.index]
         label = 'observations'
         color = 'C0'
@@ -129,13 +133,15 @@ def plot_predicted_vs_environment(environment, predicted=None, observed=None, *,
             if model_name not in predicted:
                 continue
             y = predicted[model_name][variable].dropna()
+            if variable == 'soc':
+                y = y * 10 # gC/cm2 -> kgC/m2
             x = environment[y.index]
             label = model_name
             color = f'C{i+1}'
             ax = scatter_plot(ax, x, y, color, zorder=i+1)
             ax = linregress_plot(ax, x, y, variable, label, color, lw=2, zorder=i+101)
 
-        ax.set_title(options[variable]['title'])
+        ax.set_title(splabel + options[variable]['title'])
         ax.set_xlim(xlim)
         ax.set_ylabel(options[variable]['ylabel'], size=11)
         if variable != 'soc':
@@ -156,4 +162,3 @@ def plot_predicted_vs_environment(environment, predicted=None, observed=None, *,
     fig.tight_layout()
 
     return fig, axes
-

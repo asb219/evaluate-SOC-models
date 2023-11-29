@@ -20,7 +20,7 @@ Original source code in [domwoolf/somic1](https://github.com/domwoolf/somic1).
 
 [^3]: Wang, G., et al. (2022). Soil enzymes as indicators of soil function: A step toward greater realism in microbial ecological modeling.
 _Global Change Biology, 28_(5), 1935–1950. DOI: [10.1111/gcb.16036](https://doi.org/10.1111/gcb.16036).
-Original source code in [wanggangsheng/MEND](https://github.com/wanggangsheng/MEND)
+Original source code in [wanggangsheng/MEND](https://github.com/wanggangsheng/MEND).
 
 [^4]: This specific version of CORPSE is not published, but its source code is available on GitHub at [bsulman/CORPSE-fire-response](https://github.com/bsulman/CORPSE-fire-response).
 The CORPSE model was first published in:
@@ -35,7 +35,7 @@ Original source code on Zenodo at [https://zenodo.org/records/3534562](https://z
 ## Repository contents
 
 * `evaluate_SOC_models`: contains code to run the models and produce the results
-* `produce_all_results.py`: script to run all models and produce plots and tables with results
+* `produce_all_results.py`: script to run all models and produce plots and tables with the results
 * `MEND`: git submodule of [my fork](https://github.com/asb219/MEND) of MEND's original repository [wanggangsheng/MEND](https://github.com/wanggangsheng/MEND)
 * `environment.yml`: specifies required python and R packages
 * `config_defaults.ini`: default config file
@@ -76,7 +76,7 @@ conda env create -f environment.yml
 conda activate eval14c
 ```
 
-If you don't have `conda`, download and install the newest version
+If you don't have conda, download and install the newest version
 of [Miniconda](https://docs.conda.io/en/latest/miniconda.html) for a lightweight install.
 If you prefer having a graphical user interface, get [Anaconda](https://www.anaconda.com/download/) instead.
 
@@ -90,7 +90,7 @@ Install the SOMic model's R package into the conda environment with
 Rscript -e "devtools::install_github('asb219/somic1@v1.1-asb219')"
 ```
 
-This will install directly from [my fork](https://github.com/asb219/somic1)
+This will download and install directly from [my fork](https://github.com/asb219/somic1)
 of SOMic's original repository [domwoolf/somic1](https://github.com/domwoolf/somic1).
 
 
@@ -115,11 +115,13 @@ which takes precedence over `config_defaults.ini`.
 
 ### File storage location
 
-The `evaluate_SOC_models` package produces around 26 GB of files
-(downloads, model input, model output, plots),
-which are stored in the `dump` directory by default.
+Running the `produce_all_results.py` script will produce
+12.5 GB of permanent files (downloads, model input and output, plots),
+as well as a total of around 300 GB of temporary files which are written to disk
+and quickly removed as the script runs MEND over the different soil profiles.
+All those files are (temporarily) stored in the `dump` directory by default.
 
-You can check the full path of the file storage location with
+You can check the absolute path of the file storage location with
 ```
 python -m evaluate_SOC_models.config -get-dump
 ```

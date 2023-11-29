@@ -25,6 +25,8 @@ def plot_predicted_14C(model, profile, *,
 
     atmosphere = Graven2017CompiledRecordsData().Delta14C.NH
 
+    t0, t1 = str(t0), str(t1)
+
     m = model(*profile)
     ax.axhline(y=0, color='k', alpha=0.7, zorder=-10, lw=0.8)
     ax.plot(atmosphere, c='k', lw=3, label='atmospheric CO$_2$', zorder=-1)
@@ -34,7 +36,7 @@ def plot_predicted_14C(model, profile, *,
     ax.plot(m.observed['bulk_14c'], c='C0', marker='o', markersize=7, label='observed bulk SOC', ls='', zorder=15)
     ax.plot(m.observed['LF_14c'], c='C2', marker=8, markersize=10, label='observed POM', ls='', zorder=12)
     ax.plot(m.observed['HF_14c'], c='C1', marker=9, markersize=10, label='observed MAOM', ls='', zorder=11)
-    ax.set_title(m.model_name + '\n' + ', '.join(profile), x=0.5, y=0.83, size=12)
+    ax.set_title(m.model_name + '\n' + ', '.join(profile), size=12)
     ax.set_xlim((pd.to_datetime(t0), pd.to_datetime(t1)))
     ax.set_ylim(ylim)
 
@@ -55,10 +57,13 @@ def plot_predicted_14C_all_models(profile, *,
 
     atmosphere = Graven2017CompiledRecordsData().Delta14C.NH
 
-    for model, ax in zip(
-        (MENDData, MillennialData, SOMicData, CORPSEData, MIMICSData),
-        (axes[0,0], axes[0,1], axes[1,0], axes[1,1], axes[1,2])
-    ):
+    sorted_models = (MENDData, MillennialData, SOMicData, CORPSEData, MIMICSData)
+    sorted_axes = (axes[0,0], axes[0,1], axes[1,0], axes[1,1], axes[1,2])
+    subplot_labels = iter('('+chr(i)+') ' for i in range(ord('a'), ord('z')))
+
+    t0, t1 = str(t0), str(t1)
+
+    for model, ax, splabel in zip(sorted_models, sorted_axes, subplot_labels):
         m = model(*profile)
         ax.axhline(y=0, color='k', alpha=0.7, zorder=-10, lw=0.8)
         ax.plot(atmosphere, c='k', lw=3, label='atmospheric CO$_2$', zorder=-1)
@@ -68,7 +73,7 @@ def plot_predicted_14C_all_models(profile, *,
         ax.plot(m.observed['bulk_14c'], c='C0', marker='o', markersize=7, label='observed bulk SOC', ls='', zorder=15)
         ax.plot(m.observed['LF_14c'], c='C2', marker=8, markersize=10, label='observed POM', ls='', zorder=12)
         ax.plot(m.observed['HF_14c'], c='C1', marker=9, markersize=10, label='observed MAOM', ls='', zorder=11)
-        ax.set_title(m.model_name, x=0.5, y=0.83, size=12)
+        ax.set_title(splabel + m.model_name, x=0.6, y=0.83, size=12)
         ax.set_xlim((pd.to_datetime(t0), pd.to_datetime(t1)))
         ax.set_ylim(ylim)
 

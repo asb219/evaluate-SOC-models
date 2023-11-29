@@ -1,9 +1,11 @@
 import argparse
 import pandas as pd
 
+from evaluate_SOC_models.data_manager import PandasExcelFile
 from evaluate_SOC_models.observed_data import AllObservedData
 from evaluate_SOC_models.results import (
-    MEND_problematic_profiles,
+    MEND_excluded_profiles,
+    MEND_C_works_but_14C_fails,
     run_all_models_all_profiles,
     get_all_results,
     get_bias_and_rmse
@@ -19,7 +21,14 @@ from evaluate_SOC_models.path import SAVEPATH
 from evaluate_SOC_models.plots import * # functions that start with `plot_`
 
 
+TABLEPATH = SAVEPATH / 'tables'
+PLOTPATH = SAVEPATH / 'plots'
+
+
 if __name__ == '__main__': # necessary if multiprocessing
+
+    models = (MIMICSData, MillennialData, SOMicData, CORPSEData, MENDData)
+    profiles = AllObservedData().data.index
 
     ######################
     ### RUN ALL MODELS ###
@@ -30,22 +39,22 @@ if __name__ == '__main__': # necessary if multiprocessing
         description='Evaluate all models, produce all result tables and plots',
         epilog=''
     )
-    parser.add_argument('-njobs', help='number of cores to use for running models')
-    cmdline_arguments = parser.parse_args()
-
-    run_all_models_all_profiles(
-        njobs=cmdline_arguments.njobs or 1, models=None, profiles=None
+    parser.add_argument('-njobs',
+        help='number of CPU cores on which to run the models in parallel'
     )
+    cmdline_arguments = parser.parse_args()
+    njobs = cmdline_arguments.njobs
+    njobs = 1 if njobs is None else int(njobs)
+
+    if njobs > 1:
+        run_all_models_all_profiles(njobs=njobs, models=models, profiles=profiles)
 
 
     #############################
     ### PRODUCE RESULT TABLES ###
     #############################
 
-    TABLEPATH = SAVEPATH / 'tables'
-    TABLEPATH.mkdir(parents=True, exist_ok=True)
-
-    predicted, error = get_all_results(models=None, profiles=None)
+    predicted, error = get_all_results(models=models, profiles=profiles)
     observed = AllObservedData().data
 
     predicted_after_1995 = {
@@ -58,28 +67,34 @@ if __name__ == '__main__': # necessary if multiprocessing
     }
     observed_after_1995 = observed[observed.date > pd.to_datetime('1995')]
 
+    def gCcm2_to_kgCm2(df):
+        df = df.copy().rename(columns={'soc':'soc_kgCm2'})
+        df['soc_kgCm2'] *= 10 # gC/cm2 -> kgC/m2
+        return df
+
+    excel_file = PandasExcelFile(TABLEPATH/'predicted.xlsx')
     for model_name, pred in predicted.items():
-        pred.to_csv(TABLEPATH/f'predicted_{model_name}.csv')
+        excel_file.write(gCcm2_to_kgCm2(pred), sheet_name=model_name)
+
+    excel_file = PandasExcelFile(TABLEPATH/'error.xlsx')
     for model_name, err in error.items():
-        err.to_csv(TABLEPATH/f'error_{model_name}.csv')
-    observed.to_csv(TABLEPATH/'observed.csv')
+        excel_file.write(gCcm2_to_kgCm2(err), sheet_name=model_name)
+
+    gCcm2_to_kgCm2(observed).to_excel(TABLEPATH/'observed.xlsx')
+
+    def gCcm2_to_kgCm2(df):
+        df = df.copy().rename(index={'soc':'soc_kgCm2'})
+        df.loc['soc_kgCm2'] *= 10 # gC/cm2 -> kgC/m2
+        return df
 
     bias, rmse = get_bias_and_rmse(error=error)
-    bias.to_csv(TABLEPATH/'all_bias.csv')
-    rmse.to_csv(TABLEPATH/'all_rmse.csv')
-
-    bias_after_1995, rmse_after_1995 = get_bias_and_rmse(error=error_after_1995)
-    bias_after_1995.to_csv(TABLEPATH/'all_bias_after_1995.csv')
-    rmse_after_1995.to_csv(TABLEPATH/'all_rmse_after_1995.csv')
+    gCcm2_to_kgCm2(bias).to_csv(TABLEPATH/'all_bias.csv', float_format='%.1f')
+    gCcm2_to_kgCm2(rmse).to_csv(TABLEPATH/'all_rmse.csv', float_format='%.1f')
 
 
     #####################
     ### PRODUCE PLOTS ###
     #####################
-
-    PLOTPATH = SAVEPATH / 'plots'
-
-    save_kwargs = dict(dpi=200)
 
     plot_israd_map(
         show=False, save=PLOTPATH/'israd_map.png',
@@ -88,9 +103,6 @@ if __name__ == '__main__': # necessary if multiprocessing
     plot_israd_timeseries(
         figsize=(7,4),
         show=False, save=PLOTPATH/'israd_timeseries.svg'
-    )
-    plot_israd_boxplot(
-        show=False, save=PLOTPATH/'israd_boxplot.svg'
     )
 
     plot_boxplots_C(
@@ -123,17 +135,21 @@ if __name__ == '__main__': # necessary if multiprocessing
             show=False, save=PLOTPATH/f'1-to-1_{model.model_name}.svg'
         )
 
-    example_profile=('Meyer_2012', 'Matsch', 'pasture')
+    example_profile = ('Meyer_2012', 'Matsch', 'pasture')
     profile_name = '_'.join(example_profile)
     plot_predicted_14C_all_models(
         profile=example_profile,
         ylim=(-100, 500), t0='1950', t1='2015',
         show=False, save=PLOTPATH/f'predicted_14C_example_{profile_name}.svg'
     )
-    for model in (MIMICSData, MillennialData, SOMicData, CORPSEData, MENDData):
+
+    models = (MIMICSData, MillennialData, SOMicData, CORPSEData, MENDData)
+    profiles = observed.index
+    MEND_no_14C_profiles = MEND_excluded_profiles | MEND_C_works_but_14C_fails
+    for model in models:
         savepath = PLOTPATH / 'predicted_14C_all' / model.model_name
-        for profile in observed.index:
-            if model is MENDData and profile in MEND_problematic_profiles:
+        for profile in profiles:
+            if model is MENDData and profile in MEND_no_14C_profiles:
                 continue
             save = savepath / ('_'.join(profile) + '.svg')
-            plot_predicted_14C(model, profile, save=save, show=False)
+            plot_predicted_14C(model, profile, t0=1945, save=save, show=False)

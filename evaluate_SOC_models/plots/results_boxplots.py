@@ -46,12 +46,17 @@ def _plot_boxplots(variables, predicted=None, observed=None):
 
     obs = observed.set_index('date', append=True)
 
-    for variable, ax in zip(variables, axes):
+    subplot_labels = iter('('+chr(i)+') ' for i in range(ord('a'), ord('z')))
+
+    for ax, variable, splabel in zip(axes, variables, subplot_labels):
         data = pd.DataFrame({
             model_name: model_predictions[variable]
             for model_name, model_predictions in predicted.items()
         })
         data['observed'] = obs[variable]
+
+        if variable == 'soc':
+            data = data * 10 # gC/cm2 -> kgC/m2
 
         ax = sns.boxplot(data=data, order=order, palette=palette,
             showfliers=True, flierprops=flierprops, ax=ax)
@@ -68,7 +73,7 @@ def _plot_boxplots(variables, predicted=None, observed=None):
             ax.set_yscale('log')
             ax.set_ylabel('SOC stocks (gC/cm$^2$)', size=11)
 
-        ax.set_title(title_dict[variable], size=13)
+        ax.set_title(splabel + title_dict[variable], size=13)
         ax.set_xticks(ax.get_xticks(), ax.get_xticklabels(), rotation=40, ha='right')
 
     if variables[0].endswith('14c'):

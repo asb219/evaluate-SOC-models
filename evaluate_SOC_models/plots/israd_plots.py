@@ -14,8 +14,7 @@ from .utils import _save_show_close
 
 __all__ = [
     'plot_israd_map',
-    'plot_israd_timeseries',
-    'plot_israd_boxplot'
+    'plot_israd_timeseries'
 ]
 
 
@@ -164,15 +163,4 @@ def plot_israd_timeseries(figsize=(4,3.5)):
     plt.xlabel('year', size=12)
     plt.ylabel('$\Delta^{14}$C (‰)', size=12)
 
-    return fig, None
-
-
-@_save_show_close
-def plot_israd_boxplot():
-    data = SelectedISRaDData()['data'][['bulk_14c', 'LF_14c', 'HF_14c']]
-    labels = ['total SOC', 'light\nfraction', 'heavy\nfraction']
-    fig = plt.figure(figsize=(4,4))
-    plt.axhline(c='k', alpha=0.6, lw=1)
-    plt.boxplot(data.values, vert=True, showmeans=True, labels=labels)
-    plt.ylabel('$\Delta^{14}$C (‰)')
     return fig, None

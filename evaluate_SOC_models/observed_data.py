@@ -15,9 +15,9 @@ class SelectedISRaDData(Data):
 
     datasets = ['data']
 
-    def __init__(self, *, save_pkl=False, save_csv=False, save_xlsx=False):
+    def __init__(self, *, save_pkl=True, save_csv=True, save_xlsx=False):
 
-        savedir = SAVEALLDATAPATH / 'data'
+        savedir = SAVEALLDATAPATH
         name = 'selected_israd'
         description = ('Observed data of 14C and relative C'
             ' of density fractions, and bulk 14C and SOC from ISRaD.')
@@ -93,9 +93,9 @@ class AllObservedData(Data):
 
     datasets = ['data']
 
-    def __init__(self, *, save_pkl=False, save_csv=False, save_xlsx=False):
+    def __init__(self, *, save_pkl=True, save_csv=True, save_xlsx=False):
 
-        savedir = SAVEALLDATAPATH / 'data'
+        savedir = SAVEALLDATAPATH
         name = 'all_observed'
         description = ('All selected observed data of 14C and relative C'
             ' of density fractions, and bulk 14C and SOC from ISRaD.')
