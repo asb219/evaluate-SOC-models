@@ -1,6 +1,7 @@
 # evaluate-SOC-models
 
-Evaluate the performance of new-generation soil organic carbon (SOC) models with radiocarbon (<sup>14</sup>C) data of soil density fractions.
+Evaluate the performance of new-generation soil organic carbon (SOC) models
+with radiocarbon (<sup>14</sup>C) data of soil density fractions.
 
 Evaluated models:
 
@@ -11,7 +12,7 @@ Evaluated models:
 * MIMICS-CN v1.0 [^5]
 
 
-Topsoil data from [ISRaD](https://soilradiocarbon.org)[^6] used for model evaluation:
+Topsoil data from [ISRaD](https://soilradiocarbon.org) [^6] used for model evaluation:
 
 * <sup>14</sup>C content of bulk soil
 * <sup>14</sup>C content of particulate organic matter (POM, "light" density fraction)
@@ -19,6 +20,10 @@ Topsoil data from [ISRaD](https://soilradiocarbon.org)[^6] used for model evalua
 * SOC stocks
 * Contribution of POM to SOC stocks
 * Contribution of MAOM to SOC stocks
+
+
+The main performance metrics are the RMSE and mean bias of model predictions
+with respect to the observed data from ISRaD.
 
 
 
@@ -113,12 +118,13 @@ Rscript -e "devtools::install_github('asb219/somic1@v1.1-asb219')"
 This will download and install directly from [my fork](https://github.com/asb219/somic1)
 of SOMic's original repository [domwoolf/somic1](https://github.com/domwoolf/somic1).
 
+Now that everything is set up, you are ready to run the models and produce the results.
+
 
 
 ## Produce results
 
-Run the script `produce_all_results.py` to produce plots and tables
-of the results:
+Produce plots and tables of the results by running
 ```
 python produce_all_results.py
 ```
@@ -136,28 +142,13 @@ python produce_all_results.py -njobs 7
 
 However, be aware that each run of the MEND model will produce
 over 5 GB of temporary files that are loaded into RAM by python,
-causing memory usage to spike up to 5 GB for about 1-2 second
-before falling back down below 300 MB.
+causing memory usage to spike up to 5 GB for about 1 second
+(before going back below 300 MB).
 Make sure you have enough RAM and disk space to run MEND in parallel!
 
 
-### Known issues with MEND
 
-The MEND model experiences some numerical stability issues when run
-with the forcing data of some of the 77 selected soil profiles.
-I am currently preventing MEND to run on 12 blacklisted profiles which fail on my computer.
-
-However, some issues with MEND seem to be specific to the compiler.
-For example, with soil profile `('McFarlane_2013', 'MI-Coarse UMBS', 'G3')`,
-MEND throws a SIGFPE when compiled with GNU Fortran 4.8.5 (Red Hat, Intel),
-but runs without a problem when compiled with GNU Fortran 13.2.0 (MacOS, M1).
-
-If MEND does not work for a specific soil profile on your computer,
-add the profile to the set of `MEND_excluded_profiles` in `evaluate_SOC_models/results.py`.
-
-
-
-## Customize configurations
+## Customize configurations _(optional)_
 
 For a list of configuration options, run
 ```
@@ -170,8 +161,7 @@ which takes precedence over `config_defaults.ini`.
 
 ### File storage location
 
-Running the `produce_all_results.py` script will produce
-12.5 GB of permanent files (downloads, model input and output, plots),
+Running the `produce_all_results.py` script will produce 12.5 GB of permanent files,
 as well as a total of over 300 GB of temporary files which are written to disk
 and quickly removed as the script runs MEND over the different soil profiles.
 All those files are (permanently or temporarily) stored in the `dump` directory by default.
@@ -187,7 +177,23 @@ python -m evaluate_SOC_models.config -set-dump "/your/new/path/to/dump"
 ```
 
 
-## Raising issues
+## Issues
 
 If you encounter a problem with my code (or some other aspect of this project),
 raise an [issue](https://github.com/asb219/evaluate-SOC-models/issues) on GitHub.
+
+
+### Known issues with MEND
+
+The MEND model experiences some numerical stability issues when run
+with the forcing data of some of the 77 selected soil profiles.
+I am currently preventing MEND to run on 12 blacklisted profiles which fail on my computer,
+but the exact list of profiles incompatible with MEND seems to depend on the Fortran compiler.[^7]
+
+If MEND does not work for a specific soil profile on your computer, just
+add that profile to the set of `MEND_excluded_profiles` in `evaluate_SOC_models/results.py`.
+
+
+[^7]: For example, for soil profile `('McFarlane_2013', 'MI-Coarse UMBS', 'G3')`,
+MEND throws a SIGFPE when compiled with GNU Fortran 4.8.5 (Red Hat, Intel),
+but runs without a problem when compiled with GNU Fortran 13.2.0 (MacOS, M1).

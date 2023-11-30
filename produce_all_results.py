@@ -106,7 +106,7 @@ if __name__ == '__main__': # necessary if multiprocessing
     )
 
     plot_boxplots_C(
-        predicted=predicted_after_1995, observed=observed_after_1995,
+        predicted=predicted, observed=observed,
         show=False, save=PLOTPATH/'results_boxplots_C.pdf'
     )
     plot_boxplots_14C(
