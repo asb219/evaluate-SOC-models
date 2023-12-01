@@ -22,8 +22,8 @@ Topsoil data from [ISRaD](https://soilradiocarbon.org) [^6] used for model evalu
 * Contribution of MAOM to SOC stocks
 
 
-The main performance metrics are the RMSE and mean bias of model predictions
-with respect to the observed data from ISRaD.
+The main performance metrics are the root mean squared error and mean bias
+of model predictions with respect to the observed data from ISRaD.
 
 
 
@@ -133,6 +133,9 @@ and run the 5 soil models on 77 selected topsoil profiles from ISRaD,
 producing 6.3 GB of output data.
 All resulting plots and tables are saved in the `dump/Results` folder.
 
+
+### Multiprocessing
+
 To run the models in parallel, specify the number of CPU cores
 with the `-njobs` flag.
 For example, if you want to run on 7 cores, write
@@ -150,7 +153,7 @@ Make sure you have enough RAM and disk space to run MEND in parallel!
 
 ## Customize configurations _(optional)_
 
-For a list of configuration options, run
+For a list of configuration options, check
 ```
 python -m evaluate_SOC_models.config --help
 ```
@@ -186,7 +189,7 @@ raise an [issue](https://github.com/asb219/evaluate-SOC-models/issues) on GitHub
 ### Known issues with MEND
 
 The MEND model experiences some numerical stability issues when run
-with the forcing data of some of the 77 selected soil profiles.
+with the forcing data associated with some of the soil profiles.
 I am currently preventing MEND to run on 12 blacklisted profiles which fail on my computer,
 but the exact list of profiles incompatible with MEND seems to depend on the Fortran compiler.[^7]
 

@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import scipy.optimize
+#import scipy.stats
 import matplotlib.pyplot as plt
 
 from evaluate_SOC_models.observed_data import AllObservedData
@@ -123,6 +124,8 @@ def plot_predicted_vs_environment(environment, predicted=None, observed=None, *,
         if variable == 'soc':
             y = y * 10 # gC/cm2 -> kgC/m2
         x = environment[y.index]
+        #corr = scipy.stats.pearsonr(x,y)
+        #print(f'{variable}: observed: r={corr.statistic:.3f}, p={corr.pvalue:.3f}')
         label = 'observations'
         color = 'C0'
         ax = scatter_plot(ax, x, y, color, zorder=0)
@@ -136,6 +139,8 @@ def plot_predicted_vs_environment(environment, predicted=None, observed=None, *,
             if variable == 'soc':
                 y = y * 10 # gC/cm2 -> kgC/m2
             x = environment[y.index]
+            #corr = scipy.stats.pearsonr(x,y)
+            #print(f'{variable}: {model_name}: r={corr.statistic:.3f}, p={corr.pvalue:.3f}')
             label = model_name
             color = f'C{i+1}'
             ax = scatter_plot(ax, x, y, color, zorder=i+1)
@@ -147,6 +152,7 @@ def plot_predicted_vs_environment(environment, predicted=None, observed=None, *,
         if variable != 'soc':
             ax.set_ylim(options[variable]['ylim'])
         if 'perc' in variable:
+            ax.set_yticks(ax.get_yticks()) # fix the number of ticks
             ax.set_yticklabels(['{:.0f}%'.format(x) for x in ax.get_yticks()])
         if variable == 'soc':
             ax.set_yscale('log')
