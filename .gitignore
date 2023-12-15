@@ -1,6 +1,7 @@
 .DS_Store
 config.ini
 dump/
+MIMICS2021/
 
 *.nml
 *.dat

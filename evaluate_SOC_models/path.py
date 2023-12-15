@@ -5,6 +5,7 @@ config = get_config()
 
 REPOSITORYPATH = Path(__file__).resolve().parent.parent # git repository path
 MENDREPOSITORYPATH = REPOSITORYPATH / 'MEND'
+MIMICS2021REPOSITORYPATH = REPOSITORYPATH / 'MIMICS2021'
 
 absolute_path = lambda x: REPOSITORYPATH / Path(config['path'][x]).expanduser()
 

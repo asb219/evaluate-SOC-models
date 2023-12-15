@@ -173,10 +173,10 @@ class MENDData(ModelEvaluationData):
 
     def __init__(self, entry_name, site_name, pro_name,
             spinup_C=400, spinup_F=1000, auto_remove_iofiles=True,
-            *, save_pkl=True, save_csv=False, save_xlsx=False):
+            *, save_pkl=True, save_csv=False, save_xlsx=False, **kwargs):
 
         super().__init__(entry_name, site_name, pro_name,
-            save_pkl=save_pkl, save_csv=save_csv, save_xlsx=save_xlsx)
+            save_pkl=save_pkl, save_csv=save_csv, save_xlsx=save_xlsx, **kwargs)
 
         self.spinup_C = int(spinup_C)
         self.spinup_F = int(spinup_F)

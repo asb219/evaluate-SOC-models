@@ -1,8 +1,10 @@
 import argparse
 import pandas as pd
+import matplotlib.pyplot as plt
 
 from evaluate_SOC_models.data_manager import PandasExcelFile
 from evaluate_SOC_models.observed_data import AllObservedData
+from evaluate_SOC_models.data_sources import Graven2017CompiledRecordsData
 from evaluate_SOC_models.results import (
     MEND_excluded_profiles,
     MEND_C_works_but_14C_fails,
@@ -17,6 +19,7 @@ from evaluate_SOC_models.models import (
     CORPSEData,
     MENDData
 )
+from evaluate_SOC_models.models.mimics2021 import MIMICS2021OutputFile
 from evaluate_SOC_models.path import SAVEPATH
 from evaluate_SOC_models.plots import * # functions that start with `plot_`
 
@@ -25,7 +28,7 @@ TABLEPATH = SAVEPATH / 'tables'
 PLOTPATH = SAVEPATH / 'plots'
 
 
-if __name__ == '__main__': # necessary if multiprocessing
+if False and __name__ == '__main__': # if-statement is necessary when multiprocessing
 
     models = (MIMICSData, MillennialData, SOMicData, CORPSEData, MENDData)
     profiles = AllObservedData().data.index
@@ -92,9 +95,9 @@ if __name__ == '__main__': # necessary if multiprocessing
     gCcm2_to_kgCm2(rmse).to_csv(TABLEPATH/'all_rmse.csv', float_format='%.1f')
 
 
-    #####################
-    ### PRODUCE PLOTS ###
-    #####################
+    ############################
+    ### PRODUCE RESULT PLOTS ###
+    ############################
 
     plot_israd_map(
         show=False, save=PLOTPATH/'israd_map.pdf',
@@ -107,32 +110,43 @@ if __name__ == '__main__': # necessary if multiprocessing
 
     plot_boxplots_C(
         predicted=predicted, observed=observed,
-        show=False, save=PLOTPATH/'results_boxplots_C.pdf'
+        show=False, save=PLOTPATH/'boxplots_C.pdf'
     )
     plot_boxplots_14C(
         predicted=predicted_after_1995, observed=observed_after_1995,
-        show=False, save=PLOTPATH/'results_boxplots_14C.pdf'
+        show=False, save=PLOTPATH/'boxplots_14C.pdf'
     )
 
+    path = PLOTPATH/'predicted_vs_environment'
     plot_predicted_vs_clay(
         predicted=predicted_after_1995, observed=observed_after_1995,
-        show=False, save=PLOTPATH/'predicted_vs_clay.pdf',
+        show=False, save=path/'predicted_vs_clay.pdf',
         save_kwargs=dict(bbox_inches='tight')
     )
     plot_predicted_vs_temperature(
         predicted=predicted_after_1995, observed=observed_after_1995,
-        show=False, save=PLOTPATH/'predicted_vs_temperature.pdf',
+        show=False, save=path/'predicted_vs_temperature.pdf',
         save_kwargs=dict(bbox_inches='tight')
     )
+    for model in (MIMICSData, MillennialData, SOMicData, CORPSEData, MENDData):
+        model_name = model.model_name
+        predicted_model = {model_name: predicted_after_1995[model_name]}
+        plot_predicted_vs_clay(
+            predicted=predicted_model, observed=observed_after_1995,
+            show=False, save=path/f'predicted_vs_clay_{model_name}.pdf',
+            save_kwargs=dict(bbox_inches='tight')
+        )
+        plot_predicted_vs_temperature(
+            predicted=predicted_model, observed=observed_after_1995,
+            show=False, save=path/f'predicted_vs_temperature_{model_name}.pdf',
+            save_kwargs=dict(bbox_inches='tight')
+        )
 
-    plot_predicted_vs_observed_all_models(
-        predicted=predicted, observed=observed,
-        show=False, save=PLOTPATH/'1-to-1_all.pdf'
-    )
+    path = PLOTPATH/'predicted_vs_observed'
     for model in (MIMICSData, MillennialData, SOMicData, CORPSEData, MENDData):
         plot_predicted_vs_observed(
             model=model, predicted=predicted[model.model_name], observed=observed,
-            show=False, save=PLOTPATH/f'1-to-1_{model.model_name}.pdf'
+            show=False, save=path/f'{model.model_name}.pdf'
         )
 
     example_profile = ('Meyer_2012', 'Matsch', 'Pasture')
@@ -153,3 +167,72 @@ if __name__ == '__main__': # necessary if multiprocessing
                 continue
             save = savepath / ('_'.join(profile) + '.pdf')
             plot_predicted_14C(model, profile, t0=1945, save=save, show=False)
+
+
+    #################################
+    ### CHECK 14C IMPLEMENTATIONS ###
+    #################################
+
+    # Show that SOMic's original 14C implementation is inaccurate
+
+    example_profile = ('Schrumpf_2013', 'Hainich', 'Hainich.1')
+    filename = 'check_14C_implementation_SOMic_' + '_'.join(example_profile)
+
+    somic_good = SOMicData( # use the more accurate implementation with FM (default)
+        *example_profile, use_fraction_modern=True
+    ).output.loc['1950':, ['bulk_14c','LF_14c','HF_14c']]
+
+    somic_bad = SOMicData( # use the inaccurate implementation with 14C ages
+        *example_profile, use_fraction_modern=False, name='somic_bad'
+    ).output.loc['1950':, ['bulk_14c','LF_14c','HF_14c']]
+
+    excel_file = PandasExcelFile(TABLEPATH / (filename + '.xlsx'))
+    excel_file.write(somic_good, sheet_name='using Fraction Modern (good)')
+    excel_file.write(somic_bad, sheet_name='using 14C age (inaccurate)')
+
+    atmosphere = Graven2017CompiledRecordsData().Delta14C.NH
+
+    plt.figure(figsize=(6,5))
+    plt.axhline(y=0, c='k', alpha=0.7, zorder=-10, lw=0.8)
+    plt.plot(atmosphere, lw=3, c='k', label='atmospheric CO$_2$', zorder=0)
+    plt.plot(somic_good['bulk_14c'], c='C0', label='bulk SOC', zorder=5, lw=2)
+    plt.plot(somic_bad['bulk_14c'], c='C0', label='bulk SOC (incorrect)', zorder=5, lw=2, alpha=0.5)
+    plt.plot(somic_good['LF_14c'], c='C2', label='POM', zorder=2, lw=2)
+    plt.plot(somic_bad['LF_14c'], c='C2', label='POM (incorrect)', zorder=2, lw=2, alpha=0.5)
+    plt.plot(somic_good['HF_14c'], c='C1', label='MAOM', zorder=1, lw=2)
+    plt.plot(somic_bad['HF_14c'], c='C1', label='MAOM (incorrect)', zorder=1, lw=2, alpha=0.5)
+    plt.xlim((pd.to_datetime('1950'), pd.to_datetime('2020')))
+    plt.xlabel('year', size=12)
+    plt.ylabel('$\Delta^{14}$C (‰)', size=12)
+    plt.legend(loc='upper right')
+    plt.tight_layout()
+    plt.savefig(PLOTPATH / (filename + '.pdf'))
+    plt.close()
+
+
+    # Show that MIMICS's 14C implementation (Wang et al., 2021) doesn't work
+
+    pools = MIMICS2021OutputFile.pools
+    df14 = MIMICS2021OutputFile('14C').read().set_index('year').loc[1950:, pools]
+    df12 = MIMICS2021OutputFile('12C').read().set_index('year').loc[1950:, pools]
+    Delta14C = df14/df12 * 1000 - 1000
+
+    excel_file = PandasExcelFile(TABLEPATH / 'check_14C_implementation_MIMICS2021.xlsx')
+    excel_file.write(df14, sheet_name='14C')
+    excel_file.write(df12, sheet_name='12C')
+
+    atmosphere = Graven2017CompiledRecordsData().Delta14C.loc['1950':, 'NH']
+    atmosphere.index = atmosphere.index.year
+
+    plt.figure(figsize=(6,5))
+    plt.axhline(y=0, c='k', alpha=0.7, zorder=-10, lw=0.8)
+    plt.plot(atmosphere, lw=3, c='k', label='atmospheric CO$_2$', zorder=0)
+    for p in pools:
+        plt.plot(Delta14C[p], label=p.replace('_','$_')+'$', lw=2)
+    plt.xlim(1950, 2020)
+    plt.xlabel('year', size=12)
+    plt.ylabel('$\Delta^{14}$C (‰)', size=12)
+    plt.legend(loc='upper right')
+    plt.tight_layout()
+    plt.savefig(PLOTPATH / 'check_14C_implementation_MIMICS2021.pdf')
+    plt.close()

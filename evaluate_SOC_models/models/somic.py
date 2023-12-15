@@ -36,10 +36,10 @@ class SOMicData(ModelEvaluationData):
 
     def __init__(self, entry_name, site_name, pro_name, spinup=5000, # years
             auto_remove_csv=True, use_fraction_modern=True,
-            *, save_pkl=True, save_csv=False, save_xlsx=False):
+            *, save_pkl=True, save_csv=False, save_xlsx=False, **kwargs):
 
         super().__init__(entry_name, site_name, pro_name,
-            save_pkl=save_pkl, save_csv=save_csv, save_xlsx=save_xlsx)
+            save_pkl=save_pkl, save_csv=save_csv, save_xlsx=save_xlsx, **kwargs)
 
         self.spinup = spinup
         self._auto_remove_csv = auto_remove_csv

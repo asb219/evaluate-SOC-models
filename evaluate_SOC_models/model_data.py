@@ -26,7 +26,8 @@ class ModelEvaluationData(Data):
         'soc', 'bulk_14c', 'HF_14c', 'LF_14c', 'HF_c_perc', 'LF_c_perc'
     ]
 
-    def __init__(self, entry_name, site_name, pro_name, **kwargs):
+    def __init__(self, entry_name, site_name, pro_name, *,
+            savedir=None, name=None, description=None, **kwargs):
 
         assert all(d in self.datasets for d in ModelEvaluationData.datasets)
 
@@ -39,9 +40,15 @@ class ModelEvaluationData(Data):
 
         model_name = self.model_name
 
-        savedir = SAVEOUTPUTPATH / entry_name / site_name / pro_name / model_name
-        name = model_name.lower()
-        description = 'Model evaluation data for ' + model_name
+        if savedir is None:
+            savedir = SAVEOUTPUTPATH / entry_name / site_name / pro_name / model_name
+
+        if name is None:
+            name = model_name.lower()
+
+        if description is None:
+            description = 'Model evaluation data for ' + model_name
+
         super().__init__(savedir, name, description, **kwargs)
 
 
