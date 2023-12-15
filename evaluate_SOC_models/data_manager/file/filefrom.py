@@ -161,7 +161,10 @@ class FileFromArchive(FileFrom):
             self._remove_tmp_file(ask=ask)
             raise
         else:
-            logger.debug(f'Saved to "{extract_path}".')
+            if extract_path is None:
+                logger.debug('Saved to unknown path.')
+            else:
+                logger.debug('Saved to "{extract_path}".')
 
         try:
             assert self.exists()
@@ -175,87 +178,15 @@ class FileFromArchive(FileFrom):
 
 
     def _extract(self, **kwargs):
-
         filename = self.archived_filename
         rename = self.filename
         path = str(self.savedir)
-
-        with self.archive.get_zip_file() as zip_file:
-            zip_info = self._get_file_zip_info(zip_file, filename, rename)
-            extract_path = zip_file.extract(zip_info, path=path)
-
-        return extract_path
+        return self.archive.extract_file(filename, path, rename, **kwargs)
 
 
     @property
     def _tmp_filename(self):
         return self.filename
-
-
-    @staticmethod
-    def _get_file_zip_info(zip_file, filename, rename=''):
-
-        if isinstance(filename, re.Pattern):
-            matching_zip_infos = [
-                zi for zi in zip_file.infolist()
-                if filename.match(zi.filename)
-            ]
-            if not matching_zip_infos:
-                raise ValueError(f'No file in archive matching {filename}')
-            if (n := len(matching_zip_infos)) > 1:
-                raise ValueError('{n} files in archive matching {filename}')
-
-            zip_info, = matching_zip_infos
-
-        else:
-            zip_info = zip_file.getinfo(filename)
-
-        if rename:
-            zip_info.filename = rename
-
-        return zip_info
-
-
-    @staticmethod
-    def _get_tree_zip_info(zip_file, treename='', rename=''):
-        """ If treename is empty string, get zip_info of all files """
-
-        if isinstance(treename, re.Pattern):
-            zip_info = [
-                zi for zi in zip_file.infolist()
-                if treename.match(zi.filename)
-            ]
-            if not zip_info:
-                raise ValueError(f"No tree in archive matching {treename}")
-
-            common_path = os.path.commonpath([zi.filename for zi in zip_info])
-            apparent_treename = common_path + '/' if common_path else ''
-            len_treename = len(apparent_treename)
-
-        else:
-            if not treename:
-                len_treename = 0
-                zip_info = zip_file.infolist()
-                if not zip_info:
-                    raise ValueError(f"Empty archive: '{zip_file.filename}'")
-            else:
-                if not treename.endswith('/'):
-                    treename = treename + '/'
-                len_treename = len(treename)
-                zip_info = [
-                    zi for zi in zip_file.infolist()
-                    if zi.filename.startswith(treename)
-                ]
-                if not zip_info:
-                    raise ValueError(f"No tree in archive named '{treename}'")
-
-        if rename:
-            if not rename.endswith('/'):
-                rename = rename + '/'
-            for zi in zip_info:
-                zi.filename = rename + zi.filename[len_treename:]
-
-        return zip_info
 
 
 class FileGroupFromArchive(FileGroupFrom):

@@ -15,6 +15,7 @@ dependencies:
     - numba # for just-in-time compilation
     - tqdm # progress bar
     - loguru
+    - py7zr # for 7z archives
     - pip
     - pip:
         - soilgrids

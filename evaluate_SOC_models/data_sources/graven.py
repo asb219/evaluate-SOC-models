@@ -1,7 +1,7 @@
 import pandas as pd
 
 from evaluate_SOC_models.data_manager.data import Data
-from evaluate_SOC_models.data_manager.file import Archive, FileFromURL
+from evaluate_SOC_models.data_manager.file import ZipArchive, FileFromURL
 from evaluate_SOC_models.data_manager.file import PandasCSVFile, FileFromArchive
 
 from evaluate_SOC_models.path import DOWNLOADPATH, DATAPATH
@@ -14,7 +14,7 @@ __all__ = [
 ]
 
 
-class Graven2017Archive(FileFromURL, Archive):
+class Graven2017Archive(FileFromURL, ZipArchive):
     """
     Data supplement of "Compiled records of carbon isotopes in atmospheric CO2
     for historical simulations in CMIP6" (Graven et al., 2017)

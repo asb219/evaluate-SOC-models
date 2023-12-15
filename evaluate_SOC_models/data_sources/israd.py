@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 
 from evaluate_SOC_models.data_manager.data import Data
-from evaluate_SOC_models.data_manager.file import Archive, FileFromURL
+from evaluate_SOC_models.data_manager.file import ZipArchive, FileFromURL
 from evaluate_SOC_models.data_manager.file import PandasExcelFile, FileFromArchive
 
 from evaluate_SOC_models.path import DOWNLOADPATH, DATAPATH
@@ -19,7 +19,7 @@ __all__ = [
 ]
 
 
-class ISRaDArchive(FileFromURL, Archive):
+class ISRaDArchive(FileFromURL, ZipArchive):
     """
     Data archive from ISRaD v 2.5.5.2023-09-20 (commit 629b146)
     https://github.com/International-Soil-Radiocarbon-Database/ISRaD

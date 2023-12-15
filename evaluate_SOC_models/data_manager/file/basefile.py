@@ -3,14 +3,16 @@ Basic file types
 """
 
 from pathlib import Path
-from zipfile import ZipFile
+import re
+import zipfile
+import py7zr
 import pandas as pd
 from loguru import logger
 
 from .utils import yes_no_question
 
 
-__all__ = ['File', 'FileGroup', 'Archive']
+__all__ = ['File', 'FileGroup', 'Archive', 'ZipArchive', 'SevenZipArchive']
 
 
 class File(object):
@@ -101,6 +103,7 @@ class File(object):
         return str(self.path)
 
 
+
 class FileGroup(object):
     """Group of :py:class:`File` objects."""
 
@@ -187,15 +190,80 @@ class FileGroup(object):
 
 
 class Archive(File):
-    """Archive file manageable by python's :py:mod:`zipfile` package."""
+    """Archive file."""
 
-    def namelist(self):
-        """List names of files in archive."""
+    def get_zip_file(self, mode='r', **kwargs):
+        raise NotImplementedError
+
+    def get_filename_list(self):
+        raise NotImplementedError
+
+    def extract_file(self, filename, path=None, rename=None):
+
+        if isinstance(filename, re.Pattern):
+            matching_filenames = [
+                name for name in self.get_filename_list()
+                if filename.match(name)
+            ]
+            if not matching_filenames:
+                raise ValueError(f'No file in {self} matching {filename}')
+            if (n := len(matching_filenames)) > 1:
+                raise ValueError('{n} files in {self} matching {filename}')
+            filename, = matching_filenames
+
+        else:
+            filename = str(filename)
+            if not filename in self.get_filename_list():
+                raise ValueError(f'No such file in {self}: "{filename}"')
+
+        if path is not None:
+            path = str(Path(path).expanduser().resolve())
+
+        if rename is not None:
+            rename = str(rename)
+
+        return self._extract_file(filename, path, rename)
+
+    def _extract_file(self, filename, path=None, rename=None):
+        raise NotImplementedError
+
+
+class ZipArchive(Archive):
+    """Archive file manageable with :py:mod:`zipfile` package."""
+
+    def get_zip_file(self, mode='r', **kwargs):
+        """Return an open :py:class:`zipfile.ZipFile` object"""
+        return zipfile.ZipFile(self.claim().path, mode, **kwargs)
+
+    def get_filename_list(self):
+        """Return list of str"""
         with self.get_zip_file() as zip_file:
             return zip_file.namelist()
 
+    def _extract_file(self, filename, path=None, rename=None):
+        """Returns path of extracted file as a str"""
+        with self.get_zip_file() as zip_file:
+            zip_info = zip_file.getinfo(filename)
+            if rename is not None:
+                zip_info.filename = rename
+            return zip_file.extract(zip_info, path=path)
+
+
+class SevenZipArchive(Archive):
+    """Archive file manageable with :py:mod:`py7zr` package."""
+
     def get_zip_file(self, mode='r', **kwargs):
-        """Return an open :py:class:`zipfile.ZipFile` object,
-        in read-only mode by default.
-        """
-        return ZipFile(self.claim().path, mode, **kwargs)
+        """Return an open :py:class:`py7zr.SevenZipFile` object"""
+        return py7zr.SevenZipFile(self.claim().path, mode, **kwargs)
+
+    def get_filename_list(self):
+        """Return list of str"""
+        with self.get_zip_file() as zip_file:
+            return zip_file.getnames()
+
+    def _extract_file(self, filename, path=None, rename=None):
+        """Returns `None`."""
+        if rename is not None and rename != filename:
+            raise NotImplementedError
+        with self.get_zip_file() as zip_file:
+            return zip_file.extract(path=path, targets=[filename])
