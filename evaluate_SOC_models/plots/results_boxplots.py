@@ -67,14 +67,15 @@ def _plot_boxplots(variables, predicted=None, observed=None):
 
         elif variable.endswith('perc'):
             ax.set_ylim((0,100))
-            ax.set_yticklabels(['{:.0f}%'.format(x) for x in ax.get_yticks()])
+            ax.set_yticks(ticks:=ax.get_yticks(), [f'{k:.0f}%' for k in ticks])
 
         elif variable == 'soc':
             ax.set_yscale('log')
-            ax.set_ylabel('SOC stocks (gC/cm$^2$)', size=11)
+            ax.set_ylabel('SOC stocks (kgC m$^{-2}$)', size=11)
 
         ax.set_title(splabel + title_dict[variable], size=13)
-        ax.set_xticks(ax.get_xticks(), ax.get_xticklabels(), rotation=40, ha='right')
+        ax.set_xticks(ax.get_xticks(), ax.get_xticklabels(),
+            rotation=40, horizontalalignment='right', rotation_mode='anchor')
 
     if variables[0].endswith('14c'):
         axes[0].set_ylabel('$\Delta^{14}$C (‰)', size=11)

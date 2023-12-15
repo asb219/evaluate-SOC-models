@@ -30,7 +30,8 @@ def plot_predicted_vs_clay(environment=None, *args, **kwargs):
         show=False, close=False, **kwargs
     )
     for ax in axes.flatten():
-        ax.set_xticklabels(['{:.0f}%'.format(x) for x in ax.get_xticks()])
+        ax.set_xticks(ticks:=ax.get_xticks(), [f'{k:.0f}%' for k in ticks])
+        ax.set_xlim((0,55))
     return fig, axes
 
 
@@ -46,6 +47,8 @@ def plot_predicted_vs_temperature(environment=None, *args, **kwargs):
         environment, *args, xlabel='temperature (°C)', xlim=(5,35),
         show=False, close=False, **kwargs
     )
+    for ax in axes.flatten():
+        ax.set_xlim((5,32))
     return fig, axes
 
 
@@ -61,7 +64,7 @@ def plot_predicted_vs_environment(environment, predicted=None, observed=None, *,
     options = {
         'soc': dict(
             title='Total SOC stocks',
-            ylabel='SOC stocks (kgC/m$^2$)',
+            ylabel='SOC stocks (kgC m$^{-2}$)',
             ylim=(None,None)
         ),
         'LF_c_perc': dict(
@@ -152,8 +155,7 @@ def plot_predicted_vs_environment(environment, predicted=None, observed=None, *,
         if variable != 'soc':
             ax.set_ylim(options[variable]['ylim'])
         if 'perc' in variable:
-            ax.set_yticks(ax.get_yticks()) # fix the number of ticks
-            ax.set_yticklabels(['{:.0f}%'.format(x) for x in ax.get_yticks()])
+            ax.set_yticks(ticks:=ax.get_yticks(), [f'{k:.0f}%' for k in ticks])
         if variable == 'soc':
             ax.set_yscale('log')
 

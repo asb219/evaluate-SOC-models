@@ -61,8 +61,8 @@ def plot_predicted_vs_observed(model, predicted=None, observed=None, *,
         if variable.endswith('c_perc'):
             ax.set_ylim((0,100))
             ax.set_xlim((0,100))
-            ax.set_yticklabels(['{:.0f}%'.format(i) for i in ax.get_yticks()])
-            ax.set_xticklabels(['{:.0f}%'.format(i) for i in ax.get_xticks()])
+            ax.set_yticks(ticks:=ax.get_yticks(), [f'{k:.0f}%' for k in ticks])
+            ax.set_xticks(ticks:=ax.get_xticks(), [f'{k:.0f}%' for k in ticks])
         else:
             maximum = max(np.nanmax(x), np.nanmax(y))
             if variable == 'soc':
@@ -76,7 +76,7 @@ def plot_predicted_vs_observed(model, predicted=None, observed=None, *,
     axes[1,0].set_xlabel('observed', size=12)
     axes[1,1].set_xlabel('observed', size=12)
     axes[1,2].set_xlabel('observed', size=12)
-    axes[0,0].set_ylabel('predicted\nSOC stocks (kgC/m$^2$)', size=12)
+    axes[0,0].set_ylabel('predicted\nSOC stocks (kgC m$^{-2}$)', size=12)
     axes[1,0].set_ylabel('predicted\n$\Delta^{14}$C (‰)', size=12)
 
     fig.suptitle(model.model_name, size=14)
