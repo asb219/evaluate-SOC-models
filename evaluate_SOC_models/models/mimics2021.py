@@ -30,6 +30,7 @@ class JSONFile(DataFile):
 
 class CSIRORequestJSONFile(JSONFile, FileFromDownload):
     """
+    Based on tutorial:
     https://confluence.csiro.au/display/dap/DAP+Web+Services+-+Python+Examples
     """
 
@@ -47,6 +48,17 @@ class CSIRORequestJSONFile(JSONFile, FileFromDownload):
 
 
 class MIMICS2021CodeArchive(FileFromURL, SevenZipArchive):
+    """
+    Wang Y-P (2020),
+    "Vertically resolved soil carbon model (model codes and site data)"
+    https://data.csiro.au/collection/csiro:47942v1
+    
+    Associated to research article:
+    Wang Y-P, et al. (2021)
+    "Microbial Activity and Root Carbon Inputs Are More Important than
+    Soil Carbon Diffusion in Simulating Soil Carbon Profiles", JGR-BGS.
+    DOI 10.1029/2020JG006205
+    """
 
     doi = '10.25919/843a-w584'
 
@@ -152,7 +164,9 @@ class MIMICS2021ExecutableFile(FileFrom):
 
     def execute(self):
         self.claim()
-        return subprocess.check_call(f'"{self}"', cwd=self.savedir, shell=True)
+        logger.debug(f'Executing MIMICS2021: {self}')
+        subprocess.check_call(f'"{self}"', cwd=self.savedir, shell=True)
+        logger.debug('MIMICS2021 execution finished, exit code 0.')
 
 
 class MIMICS2021OutputFile(PandasCSVFile, FileFrom):
@@ -179,16 +193,3 @@ class MIMICS2021OutputFile(PandasCSVFile, FileFrom):
         if 'year' in df.columns:
             df['year'] += 950
         return df
-
-
-# def plot_MIMICS2021_Delta14C():
-#     df14 = MIMICS2021OutputFile('14C').read()
-#     df12 = MIMICS2021OutputFile('12C').read()
-#     #Delta14C = c14/c12 * 1000 - 1000
-#
-#     import matplotlib.pyplot as plt
-#     from evaluate_SOC_models.data_sources import Graven2017CompiledRecordsData
-#
-#     atmosphere = Graven2017CompiledRecordsData().Delta14C.loc['1950':, 'NH']
-#     plt.plot(atmosphere.index.year, atmosphere.values, lw=3, c='k')
-

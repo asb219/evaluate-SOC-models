@@ -3,8 +3,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from evaluate_SOC_models.data_manager import PandasExcelFile
-from evaluate_SOC_models.observed_data import AllObservedData
 from evaluate_SOC_models.data_sources import Graven2017CompiledRecordsData
+from evaluate_SOC_models.observed_data import AllObservedData, SelectedISRaDData
+from evaluate_SOC_models.forcing_data import AllConstantForcingData
 from evaluate_SOC_models.results import (
     MEND_excluded_profiles,
     MEND_C_works_but_14C_fails,
@@ -28,7 +29,7 @@ TABLEPATH = SAVEPATH / 'tables'
 PLOTPATH = SAVEPATH / 'plots'
 
 
-if False and __name__ == '__main__': # if-statement is necessary when multiprocessing
+if __name__ == '__main__': # if-statement is necessary when multiprocessing
 
     models = (MIMICSData, MillennialData, SOMicData, CORPSEData, MENDData)
     profiles = AllObservedData().data.index
@@ -75,7 +76,9 @@ if False and __name__ == '__main__': # if-statement is necessary when multiproce
         df['soc_kgCm2'] *= 10 # gC/cm2 -> kgC/m2
         return df
 
-    excel_file = PandasExcelFile(TABLEPATH/'predicted.xlsx')
+    excel_file = PandasExcelFile(TABLEPATH/'observed_and_predicted.xlsx')
+    obs = observed.set_index('date', append=True)
+    excel_file.write(gCcm2_to_kgCm2(obs), sheet_name='observed')
     for model_name, pred in predicted.items():
         excel_file.write(gCcm2_to_kgCm2(pred), sheet_name=model_name)
 
@@ -83,7 +86,9 @@ if False and __name__ == '__main__': # if-statement is necessary when multiproce
     for model_name, err in error.items():
         excel_file.write(gCcm2_to_kgCm2(err), sheet_name=model_name)
 
-    gCcm2_to_kgCm2(observed).to_excel(TABLEPATH/'observed.xlsx')
+    excel_file = PandasExcelFile(TABLEPATH/'israd_and_soilgrids_data.xlsx')
+    excel_file.write(gCcm2_to_kgCm2(SelectedISRaDData().data), sheet_name='ISRaD data')
+    excel_file.write(AllConstantForcingData().data, sheet_name='forcing (ISRaD+SoilGrids)')
 
     def gCcm2_to_kgCm2(df):
         df = df.copy().rename(index={'soc':'soc_kgCm2'})
@@ -175,7 +180,7 @@ if False and __name__ == '__main__': # if-statement is necessary when multiproce
 
     # Show that SOMic's original 14C implementation is inaccurate
 
-    example_profile = ('Schrumpf_2013', 'Hainich', 'Hainich.1')
+    example_profile = ('Baisden_2002', 'Riverbank', 'Riverbank.1997')
     filename = 'check_14C_implementation_SOMic_' + '_'.join(example_profile)
 
     somic_good = SOMicData( # use the more accurate implementation with FM (default)
@@ -196,11 +201,11 @@ if False and __name__ == '__main__': # if-statement is necessary when multiproce
     plt.axhline(y=0, c='k', alpha=0.7, zorder=-10, lw=0.8)
     plt.plot(atmosphere, lw=3, c='k', label='atmospheric CO$_2$', zorder=0)
     plt.plot(somic_good['bulk_14c'], c='C0', label='bulk SOC', zorder=5, lw=2)
-    plt.plot(somic_bad['bulk_14c'], c='C0', label='bulk SOC (incorrect)', zorder=5, lw=2, alpha=0.5)
+    plt.plot(somic_bad['bulk_14c'], c='C0', label='bulk SOC (inaccurate)', zorder=5, lw=2, alpha=0.5)
     plt.plot(somic_good['LF_14c'], c='C2', label='POM', zorder=2, lw=2)
-    plt.plot(somic_bad['LF_14c'], c='C2', label='POM (incorrect)', zorder=2, lw=2, alpha=0.5)
+    plt.plot(somic_bad['LF_14c'], c='C2', label='POM (inaccurate)', zorder=2, lw=2, alpha=0.5)
     plt.plot(somic_good['HF_14c'], c='C1', label='MAOM', zorder=1, lw=2)
-    plt.plot(somic_bad['HF_14c'], c='C1', label='MAOM (incorrect)', zorder=1, lw=2, alpha=0.5)
+    plt.plot(somic_bad['HF_14c'], c='C1', label='MAOM (inaccurate)', zorder=1, lw=2, alpha=0.5)
     plt.xlim((pd.to_datetime('1950'), pd.to_datetime('2020')))
     plt.xlabel('year', size=12)
     plt.ylabel('$\Delta^{14}$C (‰)', size=12)
@@ -217,9 +222,7 @@ if False and __name__ == '__main__': # if-statement is necessary when multiproce
     df12 = MIMICS2021OutputFile('12C').read().set_index('year').loc[1950:, pools]
     Delta14C = df14/df12 * 1000 - 1000
 
-    excel_file = PandasExcelFile(TABLEPATH / 'check_14C_implementation_MIMICS2021.xlsx')
-    excel_file.write(df14, sheet_name='14C')
-    excel_file.write(df12, sheet_name='12C')
+    Delta14C.to_excel(TABLEPATH / 'check_14C_implementation_MIMICS2021.xlsx', sheet_name='Delta14C')
 
     atmosphere = Graven2017CompiledRecordsData().Delta14C.loc['1950':, 'NH']
     atmosphere.index = atmosphere.index.year

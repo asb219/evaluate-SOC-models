@@ -170,6 +170,8 @@ def get_results_all_profiles(model, profiles=None):
     all_error = pd.concat({
         profile: error for profile,(predicted,error) in all_results.items()
     })
+    all_predicted.index.names = ['entry_name', 'site_name', 'pro_name', 'date']
+    all_error.index.names = ['entry_name', 'site_name', 'pro_name', 'date']
     return all_predicted, all_error
 
 

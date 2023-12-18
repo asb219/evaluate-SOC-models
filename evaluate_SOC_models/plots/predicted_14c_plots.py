@@ -18,7 +18,7 @@ __all__ = [
 
 @_save_show_close
 def plot_predicted_14C(model, profile, *,
-        figsize=(7,5), ylim=(None, None), t0='1945', t1='2020'):
+        figsize=(6,5), ylim=(None, None), t0='1945', t1='2020'):
 
     fig = plt.figure(figsize=figsize)
     ax = plt.gca()

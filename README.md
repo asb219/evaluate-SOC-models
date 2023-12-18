@@ -183,7 +183,7 @@ python -m evaluate_SOC_models.config -set-dump "/your/new/path/to/dump"
 ## Issues
 
 If you encounter a problem with my code (or some other aspect of this project),
-raise an [issue](https://github.com/asb219/evaluate-SOC-models/issues) on GitHub.
+please raise an [issue](https://github.com/asb219/evaluate-SOC-models/issues) on GitHub.
 
 
 ### Known issues with MEND
