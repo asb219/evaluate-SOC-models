@@ -2,6 +2,8 @@
 config.ini
 dump/
 MIMICS2021/
+.RData
+.Rhistory
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

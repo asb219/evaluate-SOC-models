@@ -208,7 +208,7 @@ class Archive(File):
             if not matching_filenames:
                 raise ValueError(f'No file in {self} matching {filename}')
             if (n := len(matching_filenames)) > 1:
-                raise ValueError('{n} files in {self} matching {filename}')
+                raise ValueError(f'{n} files in {self} matching {filename}')
             filename, = matching_filenames
 
         else:

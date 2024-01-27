@@ -287,11 +287,7 @@ class Data:
             Pattern of filenames to remove. If `None`, remove all
             files belonging to this instance of :py:class:`Data`.
         ask : bool, default True
-            Ask for confirmation before removing
-        well_behaved : bool, default True
-            Only remove filenames which match the pattern and belong
-            to this instance of :py:class:`Data`. If `False`, remove
-            all files in :py:attr:`savedir` matching the pattern.
+            Ask for confirmation before removing.
         """
         if pattern is None:
             for file_group in self._file_groups.values():
@@ -325,11 +321,9 @@ class Data:
         return super().__dir__() + self.datasets
 
     def __repr__(self):
-        if self.description is None:
-            info = f'(name="{self.name}", description=None)'
-        else:
-            info = f'(name="{self.name}", description="{self.description}")'
-        return self.__class__.__name__ + info
+        info = f'savedir={self.savedir}, name="{self.name}", description='
+        info += 'None' if self.description is None else f'"{self.description}"'
+        return self.__class__.__name__ + '(' + info + ')'
 
     def __str__(self):
         return self.__class__.__name__ #+ f'("{self.name}")'
