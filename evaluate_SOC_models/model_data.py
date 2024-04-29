@@ -97,7 +97,24 @@ class ModelEvaluationData(Data):
         output = self['output'][self.predicted_columns].copy()
         dates = self._observed.data.index
         predicted = output.reindex(index=dates, method='nearest')
+
+        # "Normalize" 14C data to 2000-07-01
+        c = ['bulk_14c', 'HF_14c', 'LF_14c']
+        c_2000 = ['bulk_14c_2000', 'HF_14c_2000', 'LF_14c_2000']
+        dates = [pd.to_datetime('2000-07-01')] * len(predicted)
+        predicted[c_2000] = output[c].reindex(dates, method='nearest').values
+
         return predicted
+
+
+    # def _process_predicted_normalized_to_2000(self):
+    #     output = self['output'][self.predicted_columns].copy()
+    #     predicted = self['predicted']
+    #     c = ['bulk_14c', 'HF_14c', 'LF_14c']
+    #     c_2000 = ['bulk_14c_2000', 'HF_14c_2000', 'LF_14c_2000']
+    #     dates = [pd.to_datetime('2000-07-01')] * len(predicted)
+    #     predicted[c_2000] = output[c].reindex(dates, method='nearest').values
+    #     return predicted
 
 
     def _process_observed(self):

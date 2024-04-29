@@ -1,9 +1,11 @@
 import numpy as np
 import pandas as pd
+import scipy
+from numba import njit
 
 from evaluate_SOC_models.data_manager import Data
 
-from evaluate_SOC_models.data_sources import ISRaDData
+from evaluate_SOC_models.data_sources import ISRaDData, Graven2017CompiledRecordsData
 from evaluate_SOC_models.path import TOPSOIL_MIN_DEPTH, TOPSOIL_MAX_DEPTH
 from evaluate_SOC_models.path import SAVEOUTPUTPATH, SAVEALLDATAPATH
 
@@ -28,7 +30,6 @@ class SelectedISRaDData(Data):
 
     def _process_data(self):
         israd = ISRaDData(TOPSOIL_MIN_DEPTH, TOPSOIL_MAX_DEPTH)
-        #israd.purge_savedir('*topsoil_data.pkl.gz', ask=False, well_behaved=False)
 
         df = israd['topsoil_data'].copy()
 
@@ -74,17 +75,6 @@ class SelectedISRaDData(Data):
         ]]
         df = df.join(entry_info)
 
-        # # Get rid of permafrost, peatland, thermokarst, wetland soils
-        # df = df[
-        #     (df['pro_peatland'] != 'yes') &
-        #     (df['pro_permafrost'] != 'yes') &
-        #     (df['pro_thermokarst'] != 'yes') &
-        #     (df['pro_land_cover'] != 'wetland')
-        # ]
-        #
-        # # Select data from after 1990
-        # df = df[df['date'] > '1990']
-
         return df.copy()
 
 
@@ -103,18 +93,61 @@ class AllObservedData(Data):
         super().__init__(savedir, name, description,
             save_pkl=save_pkl, save_csv=save_csv, save_xlsx=save_xlsx)
 
+
     def _process_data(self):
         obs = SelectedISRaDData().data[
             ['date', 'soc', 'bulk_14c'] +
             [f+v for v in ('_14c','_c_perc') for f in ('HF','LF','fLF','oLF')]
         ].copy()
+
+        # "Normalize" 14C data to year 2000
+        # like in Shi et al. (2020) https://doi.org/10.1038/s41561-020-0596-z
+        # and Heckman et al. (2021) https://doi.org/10.1111/gcb.16023
+
+        zones = ISRaDData().pro_info['pro_atm_zone'].str[:-3]
+        F_atmosphere = Graven2017CompiledRecordsData()['F14C']
+
+        def error(k, obs_year, obs_Delta14C, years, F_input):
+            return abs(_one_pool_steady_state_model(k, obs_year, years, F_input) - obs_Delta14C)
+
+        def normalize_to_2000(row):
+            row = row.copy()
+            zone = zones.loc[row.name]
+            F_input = F_atmosphere[zone].values
+            years = F_atmosphere.index.year.values
+            obs_year = row['date'].year
+            for fraction in ('bulk', 'HF', 'LF', 'fLF', 'oLF'):
+                obs_Delta14C = row[fraction+'_14c']
+                result = scipy.optimize.minimize(error, x0=0.01, bounds=[(1e-6, 1)],
+                    args=(obs_year, obs_Delta14C, years, F_input), method='Nelder-Mead')
+                k, = result.x
+                row[fraction+'_k'] = k
+                row[fraction+'_success'] = result.success
+                row[fraction+'_14c_2000'] = _one_pool_steady_state_model(k, 2000, years, F_input)
+            return row
+
+        obs = obs.apply(normalize_to_2000, axis=1)
+
         return obs
+
+
+@njit
+def _one_pool_steady_state_model(k, out_year, years, F_input):
+    lambda14C = 1.2e-4 # radioactive decay rate of 14C (per annum)
+    k_lambda14C = k + lambda14C # k is the carbon turnover rate
+    F = k / k_lambda14C # steady-state solution when F_input = 1
+    for year, Fin in zip(years, F_input):
+        F += (k * Fin) - (k_lambda14C * F)
+        if year == out_year:
+            Delta14C = (F - 1) * 1000
+            return Delta14C
+    raise ValueError
 
 
 
 class ObservedData(Data):
 
-    datasets = ['data']
+    datasets = ['data', 'data_normalized_to_2000']
 
     def __init__(self, entry_name, site_name, pro_name, *,
             save_pkl=False, save_csv=False, save_xlsx=False):

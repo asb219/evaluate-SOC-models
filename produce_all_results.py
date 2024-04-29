@@ -122,30 +122,37 @@ if __name__ == '__main__': # if-statement is necessary when multiprocessing
         show=False, save=PLOTPATH/'boxplots_14C.pdf'
     )
 
-    path = PLOTPATH/'predicted_vs_environment'
-    plot_predicted_vs_clay(
-        predicted=predicted_after_1995, observed=observed_after_1995,
-        show=False, save=path/'predicted_vs_clay.pdf',
-        save_kwargs=dict(bbox_inches='tight')
-    )
-    plot_predicted_vs_temperature(
-        predicted=predicted_after_1995, observed=observed_after_1995,
-        show=False, save=path/'predicted_vs_temperature.pdf',
-        save_kwargs=dict(bbox_inches='tight')
-    )
-    for model in (MIMICSData, MillennialData, SOMicData, CORPSEData, MENDData):
-        model_name = model.model_name
-        predicted_model = {model_name: predicted_after_1995[model_name]}
+    for normalized_to_2000, path in [
+        (True, PLOTPATH/'predicted_vs_environment_normalized_to_2000'),
+        (False, PLOTPATH/'predicted_vs_environment_without_normalization')
+    ]:
         plot_predicted_vs_clay(
-            predicted=predicted_model, observed=observed_after_1995,
-            show=False, save=path/f'predicted_vs_clay_{model_name}.pdf',
-            save_kwargs=dict(bbox_inches='tight')
+            predicted=predicted_after_1995, observed=observed_after_1995,
+            normalized_to_2000=normalized_to_2000,
+            save=path/'predicted_vs_clay.pdf',
+            save_kwargs=dict(bbox_inches='tight'), show=False
         )
         plot_predicted_vs_temperature(
-            predicted=predicted_model, observed=observed_after_1995,
-            show=False, save=path/f'predicted_vs_temperature_{model_name}.pdf',
-            save_kwargs=dict(bbox_inches='tight')
+            predicted=predicted_after_1995, observed=observed_after_1995,
+            normalized_to_2000=normalized_to_2000,
+            save=path/'predicted_vs_temperature.pdf',
+            save_kwargs=dict(bbox_inches='tight'), show=False
         )
+        for model in (MIMICSData, MillennialData, SOMicData, CORPSEData, MENDData):
+            model_name = model.model_name
+            predicted_model = {model_name: predicted_after_1995[model_name]}
+            plot_predicted_vs_clay(
+                predicted=predicted_model, observed=observed_after_1995,
+                normalized_to_2000=normalized_to_2000,
+                save=path/f'predicted_vs_clay_{model_name}.pdf',
+                save_kwargs=dict(bbox_inches='tight'), show=False
+            )
+            plot_predicted_vs_temperature(
+                predicted=predicted_model, observed=observed_after_1995,
+                normalized_to_2000=normalized_to_2000,
+                save=path/f'predicted_vs_temperature_{model_name}.pdf',
+                save_kwargs=dict(bbox_inches='tight'), show=False
+            )
 
     path = PLOTPATH/'predicted_vs_observed'
     for model in (MIMICSData, MillennialData, SOMicData, CORPSEData, MENDData):

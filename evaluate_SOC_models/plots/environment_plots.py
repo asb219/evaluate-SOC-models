@@ -54,12 +54,14 @@ def plot_predicted_vs_temperature(environment=None, *args, **kwargs):
 
 @_save_show_close
 def plot_predicted_vs_environment(environment, predicted=None, observed=None, *,
-        xlabel='', xlim=(None,None), figsize=(10,6)):
+        normalized_to_2000=False, xlabel='', xlim=(None,None), figsize=(10,6)):
 
     if observed is None:
         observed = AllObservedData().data
     if predicted is None:
         predicted = get_all_results()[0]
+
+    suffix = '_2000' if normalized_to_2000 else ''
 
     options = {
         'soc': dict(
@@ -77,17 +79,17 @@ def plot_predicted_vs_environment(environment, predicted=None, observed=None, *,
             ylabel=None,
             ylim=(0,100)
         ),
-        'bulk_14c': dict(
+        'bulk_14c'+suffix: dict(
             title='Bulk SOC $\Delta^{14}$C',
             ylabel='$\Delta^{14}$C (‰)',
             ylim=(-150,250)
         ),
-        'LF_14c': dict(
+        'LF_14c'+suffix: dict(
             title='POM $\Delta^{14}$C',
             ylabel=None,
             ylim=(-150,250)
         ),
-        'HF_14c': dict(
+        'HF_14c'+suffix: dict(
             title='MAOM $\Delta^{14}$C',
             ylabel=None,
             ylim=(-150,250)
@@ -112,11 +114,14 @@ def plot_predicted_vs_environment(environment, predicted=None, observed=None, *,
         return ax
 
 
+    variables = [
+        'soc', 'LF_c_perc', 'HF_c_perc',
+        'bulk_14c'+suffix, 'LF_14c'+suffix, 'HF_14c'+suffix
+    ]
+
     fig, axes = plt.subplots(
         nrows=2, ncols=3, sharey=False, sharex=True, figsize=figsize
     )
-
-    variables = ['soc', 'LF_c_perc', 'HF_c_perc', 'bulk_14c', 'LF_14c', 'HF_14c']
 
     subplot_labels = iter('('+chr(i)+') ' for i in range(ord('a'), ord('z')))
 
