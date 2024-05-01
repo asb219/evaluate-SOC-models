@@ -37,7 +37,7 @@ def _plot_boxplots(variables, predicted=None, observed=None):
         'bulk_14c': 'Bulk SOC $\Delta^{14}$C',
         'LF_14c': 'POM $\Delta^{14}$C',
         'HF_14c': 'MAOM $\Delta^{14}$C',
-        'soc': 'Total SOC stocks',
+        'soc': 'SOC stocks',
         'LF_c_perc': 'POM contribution',
         'HF_c_perc': 'MAOM contribution'
     }

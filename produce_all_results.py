@@ -31,8 +31,8 @@ PLOTPATH = SAVEPATH / 'plots'
 
 if __name__ == '__main__': # if-statement is necessary when multiprocessing
 
-    models = (MIMICSData, MillennialData, SOMicData, CORPSEData, MENDData)
-    profiles = AllObservedData().data.index
+    MODELS = (MIMICSData, MillennialData, SOMicData, CORPSEData, MENDData)
+    PROFILES = AllObservedData().data.index
 
     ######################
     ### RUN ALL MODELS ###
@@ -51,25 +51,26 @@ if __name__ == '__main__': # if-statement is necessary when multiprocessing
     njobs = 1 if njobs is None else int(njobs)
 
     if njobs > 1:
-        run_all_models_all_profiles(njobs=njobs, models=models, profiles=profiles)
+        run_all_models_all_profiles(njobs=njobs, models=MODELS, profiles=PROFILES)
+
+    predicted, error = get_all_results(models=MODELS, profiles=PROFILES)
+    observed = AllObservedData().data
+
+    _1995 = pd.to_datetime('1995')
+    predicted_after_1995 = {
+        model_name: pred[pred.index.get_level_values('date') > _1995]
+        for model_name, pred in predicted.items()
+    }
+    error_after_1995 = {
+        model_name: err[err.index.get_level_values('date') > _1995]
+        for model_name, err in error.items()
+    }
+    observed_after_1995 = observed[observed.date > _1995]
 
 
     #############################
     ### PRODUCE RESULT TABLES ###
     #############################
-
-    predicted, error = get_all_results(models=models, profiles=profiles)
-    observed = AllObservedData().data
-
-    predicted_after_1995 = {
-        model_name: pred[pred.index.get_level_values('date') > pd.to_datetime('1995')]
-        for model_name, pred in predicted.items()
-    }
-    error_after_1995 = {
-        model_name: err[err.index.get_level_values('date') > pd.to_datetime('1995')]
-        for model_name, err in error.items()
-    }
-    observed_after_1995 = observed[observed.date > pd.to_datetime('1995')]
 
     def gCcm2_to_kgCm2(df):
         df = df.copy().rename(columns={'soc':'soc_kgCm2'})
@@ -123,39 +124,55 @@ if __name__ == '__main__': # if-statement is necessary when multiprocessing
     )
 
     for normalized_to_2000, path in [
-        (True, PLOTPATH/'predicted_vs_environment_normalized_to_2000'),
-        (False, PLOTPATH/'predicted_vs_environment_without_normalization')
+        (True, PLOTPATH/'environment_plots'/'normalized_to_2000'),
+        (False, PLOTPATH/'environment_plots'/'without_normalization')
     ]:
-        plot_predicted_vs_clay(
-            predicted=predicted_after_1995, observed=observed_after_1995,
-            normalized_to_2000=normalized_to_2000,
-            save=path/'predicted_vs_clay.pdf',
-            save_kwargs=dict(bbox_inches='tight'), show=False
-        )
-        plot_predicted_vs_temperature(
-            predicted=predicted_after_1995, observed=observed_after_1995,
-            normalized_to_2000=normalized_to_2000,
-            save=path/'predicted_vs_temperature.pdf',
-            save_kwargs=dict(bbox_inches='tight'), show=False
-        )
-        for model in (MIMICSData, MillennialData, SOMicData, CORPSEData, MENDData):
-            model_name = model.model_name
-            predicted_model = {model_name: predicted_after_1995[model_name]}
-            plot_predicted_vs_clay(
-                predicted=predicted_model, observed=observed_after_1995,
+        for plot_type in ['predicted', 'error', 'absolute_error']:
+            plot_data_vs_clay(
+                plot_type=plot_type, predicted=predicted_after_1995,
+                observed=observed_after_1995, error=error_after_1995,
                 normalized_to_2000=normalized_to_2000,
-                save=path/f'predicted_vs_clay_{model_name}.pdf',
+                save=path/(plot_type+'_vs_clay.pdf'),
                 save_kwargs=dict(bbox_inches='tight'), show=False
             )
-            plot_predicted_vs_temperature(
-                predicted=predicted_model, observed=observed_after_1995,
+            plot_data_vs_temperature(
+                plot_type=plot_type, predicted=predicted_after_1995,
+                observed=observed_after_1995, error=error_after_1995,
                 normalized_to_2000=normalized_to_2000,
-                save=path/f'predicted_vs_temperature_{model_name}.pdf',
+                save=path/(plot_type+'_vs_temperature.pdf'),
                 save_kwargs=dict(bbox_inches='tight'), show=False
             )
+            for model in MODELS:
+                model_name = model.model_name
+                plot_data_vs_clay(
+                    plot_type=plot_type,
+                    predicted={model_name: predicted_after_1995[model_name]},
+                    observed=observed_after_1995,
+                    error={model_name: error_after_1995[model_name]},
+                    normalized_to_2000=normalized_to_2000,
+                    save=path/(plot_type+f'_vs_clay_{model_name}.pdf'),
+                    save_kwargs=dict(bbox_inches='tight'), show=False
+                )
+                plot_data_vs_temperature(
+                    plot_type=plot_type,
+                    predicted={model_name: predicted_after_1995[model_name]},
+                    observed=observed_after_1995,
+                    error={model_name: error_after_1995[model_name]},
+                    normalized_to_2000=normalized_to_2000,
+                    save=path/(plot_type+f'_vs_temperature_{model_name}.pdf'),
+                    save_kwargs=dict(bbox_inches='tight'), show=False
+                )
+
+    plot_sampling_date_vs_clay(
+        show=False, save=PLOTPATH/'environment_plots'/'sampling_year_vs_clay.pdf'
+    )
+    plot_sampling_date_vs_temperature(
+        show=False, save=PLOTPATH/'environment_plots'/'sampling_year_vs_temperature.pdf'
+    )
+
 
     path = PLOTPATH/'predicted_vs_observed'
-    for model in (MIMICSData, MillennialData, SOMicData, CORPSEData, MENDData):
+    for model in MODELS:
         plot_predicted_vs_observed(
             model=model, predicted=predicted[model.model_name], observed=observed,
             show=False, save=path/f'{model.model_name}.pdf'
@@ -169,15 +186,13 @@ if __name__ == '__main__': # if-statement is necessary when multiprocessing
         show=False, save=PLOTPATH/f'predicted_14C_example_{profile_name}.pdf'
     )
 
-    models = (MIMICSData, MillennialData, SOMicData, CORPSEData, MENDData)
-    profiles = observed.index
     MEND_no_14C_profiles = MEND_excluded_profiles | MEND_C_works_but_14C_fails
-    for model in models:
-        savepath = PLOTPATH / 'predicted_14C_all' / model.model_name
-        for profile in profiles:
+    for model in MODELS:
+        path = PLOTPATH / 'predicted_14C_all' / model.model_name
+        for profile in PROFILES:
             if model is MENDData and profile in MEND_no_14C_profiles:
                 continue
-            save = savepath / ('_'.join(profile) + '.pdf')
+            save = path / ('_'.join(profile) + '.pdf')
             plot_predicted_14C(model, profile, t0=1945, save=save, show=False)
 
 

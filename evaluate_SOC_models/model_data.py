@@ -118,7 +118,8 @@ class ModelEvaluationData(Data):
 
 
     def _process_observed(self):
-        observed = self._observed.data[self.predicted_columns]
+        c_2000 = ['bulk_14c_2000', 'HF_14c_2000', 'LF_14c_2000']
+        observed = self._observed.data[self.predicted_columns + c_2000]
         return observed
 
 
