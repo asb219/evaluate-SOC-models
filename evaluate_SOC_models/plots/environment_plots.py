@@ -55,7 +55,7 @@ def plot_data_vs_temperature(environment=None, *args, **kwargs):
     return fig, axes
 
 
-@_save_show_close
+@_save_show_close   
 def plot_data_vs_environment(environment, plot_type='predicted',
         predicted=None, observed=None, error=None, *, plot_soc_logscale=None,
         normalized_to_2000=False, xlabel='', figsize=(10,6)):
@@ -176,7 +176,7 @@ def plot_data_vs_environment(environment, plot_type='predicted',
             )
 
         ax.set_title(splabel + options[variable]['title'])
-        ax.set_ylabel(options[variable]['ylabel'], ''), size=11)
+        ax.set_ylabel(options[variable]['ylabel'], size=11)
         if plot_soc_logscale and variable == 'soc':
             ax.set_yscale('log')
         else:
