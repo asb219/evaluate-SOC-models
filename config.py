@@ -38,7 +38,7 @@ if __name__ == '__main__':
 
     if len(sys.argv) == 1: # `python -m config` was run without arguments
         parser.print_help()
-        return
+        sys.exit()
 
     args = parser.parse_args()
 
