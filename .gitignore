@@ -1,6 +1,7 @@
 .DS_Store
 config.ini
-dump/
+dump/*
+!dump/README.md
 MIMICS2021/
 .RData
 .Rhistory

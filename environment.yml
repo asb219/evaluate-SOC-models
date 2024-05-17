@@ -21,6 +21,7 @@ dependencies:
         - soilgrids
         - rioxarray # read geotiff files
         - f90nml # to edit fortran namelist files
+        - -e . # editable installation of evaluate-SOC-models using setup.py
 
     # Dependencies of the SOMic model's R package:
     - r-base=4.2

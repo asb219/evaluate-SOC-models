@@ -1,5 +1,5 @@
 from pathlib import Path
-from evaluate_SOC_models.config_file import get_config
+from evaluate_SOC_models.config import get_config
 
 config = get_config()
 

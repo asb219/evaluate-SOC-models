@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 from loguru import logger
 
-from evaluate_SOC_models.config_file import get_config
+from evaluate_SOC_models.config import get_config
 
 
 __all__ = [
