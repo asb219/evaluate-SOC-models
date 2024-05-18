@@ -4,10 +4,10 @@ import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 import matplotlib.ticker as mticker
 
-from evaluate_SOC_models.observed_data import SelectedISRaDData
-from evaluate_SOC_models.forcing_data import AllConstantForcingData
-from evaluate_SOC_models.data_sources import CESM2LEOutputFileGroup
-from evaluate_SOC_models.data_sources import Graven2017CompiledRecordsData
+from evaluate_SOC_models.data.observed import SelectedISRaDData
+from evaluate_SOC_models.data.forcing import AllConstantForcingData
+from evaluate_SOC_models.data.sources import CESM2LEOutputFileGroup
+from evaluate_SOC_models.data.sources import Graven2017CompiledRecordsData
 
 from .utils import _save_show_close
 

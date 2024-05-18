@@ -10,6 +10,6 @@ setup(
     author_email='asb219@ic.ac.uk',
     url='https://github.com/asb219/evaluate-SOC-models',
     license='GNU General Public License v3 (GPLv3)',
-    packages=['evaluate_SOC_models'],
+    packages=['evaluate_SOC_models', 'data_manager'],
     modules=['config']
 )

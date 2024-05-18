@@ -5,7 +5,7 @@ import pandas as pd
 from numba import njit
 import scipy.optimize
 
-from evaluate_SOC_models.model_data import ModelEvaluationData
+from .base import ModelEvaluationData
 
 
 __all__ = ['MIMICSData']

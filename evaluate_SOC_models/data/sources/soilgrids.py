@@ -2,8 +2,7 @@ import numpy as np
 import pandas as pd
 from soilgrids import SoilGrids
 
-from evaluate_SOC_models.data_manager.data import Data
-from evaluate_SOC_models.data_manager.file import XarrayGeoTIFFile, FileFromDownload
+from data_manager import Data, XarrayGeoTIFFile, FileFromDownload
 
 from evaluate_SOC_models.path import DOWNLOADPATH, DATAPATH
 
@@ -89,6 +88,8 @@ class SoilGridsPointFile(SoilGridsFile):
 
         self.lat = lat
         self.lon = lon
+        self.dx = dx
+        self.dy = dy
 
 
 
@@ -102,15 +103,14 @@ class SoilGridsPointData(Data):
     service_id_dict = {
         'bd':'bdod', 'pH':'phh2o', 'sand':'sand', 'silt':'silt', 'clay':'clay'
     }
-    #depth_layer_bounds = [0,5,15,30,60,100,200]
 
 
     def __init__(self, lat, lon, top, bot, *, # top,bot (cm) of soil layer
             dx=0.01, dy=0.01, width=10, height=10, # SoilGrids download kwargs
             save_pkl=False, save_csv=False, save_xlsx=False):
 
-        if lon>=180:
-            lon -= 360 # negative degrees west instead of degress east
+        if lon >= 180:
+            lon -= 360 # use negative degrees west instead of degrees east
 
         lat = np.round(float(lat),3)
         lon = np.round(float(lon),3)
@@ -122,20 +122,20 @@ class SoilGridsPointData(Data):
         identifier = f'lat{lat:+07.3f}_lon{lon:+08.3f}_top{top}_bot{bot}'
         savedir = DATAPATH / 'SoilGrids' / identifier
         name = 'sg'
-        description = f'SoilGrids data for {top}-{bot}cm depth at {lat}N, {lon}E.'
+        desc = f'SoilGrids data for {top}-{bot}cm depth at {lat}N, {lon}E.'
 
-        super().__init__(savedir, name, description,
+        super().__init__(savedir, name, desc,
             save_pkl=save_pkl, save_csv=save_csv, save_xlsx=save_xlsx)
 
-        self.sourcefiles = dict()
+        _depth_ids = self._get_depth_ids(top, bot) # e.g. ['0-5cm', '5-15cm']
 
-        for variable in self.variables:
-            service_id = self.service_id_dict[variable]
-            files = self._get_TIF_files(
-                service_id, lat, lon, top, bot,
-                dx=dx, dy=dy, width=width, height=height
-            )
-            self.sourcefiles[variable] = files
+        self.sourcefiles = {
+            variable: [
+                SoilGridsPointFile(
+                    coverage_id, lat, lon, dx=dx, dy=dy, width=width, height=height
+                ) for coverage_id in [service_id+'_'+d+'_mean' for d in _depth_ids]
+            ] for variable, service_id in self.service_id_dict.items()
+        }
 
         self.lat = lat
         self.lon = lon
@@ -194,11 +194,10 @@ class SoilGridsPointData(Data):
             depth_intervals = self._get_depth_intervals(self.top, self.bot)
             depth_intervals[0][0] = self.top
             depth_intervals[-1][1] = self.bot
-            layer_thicknesses = pd.Series({
+            layer_thicknesses = self.__layer_thicknesses = pd.Series({
                 depth_id: d2-d1 for depth_id, (d1,d2)
                 in zip(depth_ids, depth_intervals)
             })
-            self.__layer_thicknesses = layer_thicknesses
         if variable == 'bd':
             integrator = layer_thicknesses
         else:
@@ -207,28 +206,15 @@ class SoilGridsPointData(Data):
         return pd.Series([value], index=[variable])
 
 
-    def _get_TIF_files(self, service_id, lat, lon, top, bot, **kwargs):
-        coverage_ids = self._get_coverage_ids(service_id, top, bot)
-        files = [
-            SoilGridsPointFile(coverage_id, lat, lon, **kwargs)
-            for coverage_id in coverage_ids
-        ]
-        return files
-
-    def _get_coverage_ids(self, service_id, top, bot):
-        depth_ids = self._get_depth_ids(top, bot)
-        coverage_ids = [service_id+'_'+d+'_mean' for d in depth_ids]
-        return coverage_ids
-
     def _get_depth_ids(self, top, bot):
         depth_intervals = self._get_depth_intervals(top, bot)
         depth_ids = [f'{d1}-{d2}cm' for d1,d2 in depth_intervals]
         return depth_ids
 
     def _get_depth_intervals(self, top, bot):
-        depth_intervals = []
-        depth_bounds = [0,5,15,30,60,100,200]
-        for d1,d2 in zip(depth_bounds[:-1], depth_bounds[1:]):
+        depth_intervals = [] # intervals overlapping with top-bot depth range
+        all_depth_bounds = [0, 5, 15, 30, 60, 100, 200] # cm
+        for d1,d2 in zip(all_depth_bounds[:-1], all_depth_bounds[1:]):
             if top < d2 and bot > d1:
                 depth_intervals.append([d1,d2])
         return depth_intervals

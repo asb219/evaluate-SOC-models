@@ -1,11 +1,11 @@
 from pathlib import Path
 import subprocess
-
 import pandas as pd
 import numpy as np
 
-from evaluate_SOC_models.data_manager import PandasCSVFile
-from evaluate_SOC_models.model_data import ModelEvaluationData
+from data_manager import PandasCSVFile
+
+from .base import ModelEvaluationData
 
 
 

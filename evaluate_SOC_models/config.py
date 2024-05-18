@@ -2,7 +2,7 @@ from pathlib import Path
 from configparser import ConfigParser
 from loguru import logger
 
-from evaluate_SOC_models.data_manager import DataFile
+from data_manager import DataFile
 
 
 __all__ = [

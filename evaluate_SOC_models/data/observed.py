@@ -3,9 +3,9 @@ import pandas as pd
 import scipy
 from numba import njit
 
-from evaluate_SOC_models.data_manager import Data
+from data_manager import Data
 
-from evaluate_SOC_models.data_sources import ISRaDData, Graven2017CompiledRecordsData
+from evaluate_SOC_models.data.sources import ISRaDData, Graven2017CompiledRecordsData
 from evaluate_SOC_models.path import TOPSOIL_MIN_DEPTH, TOPSOIL_MAX_DEPTH
 from evaluate_SOC_models.path import SAVEOUTPUTPATH, SAVEALLDATAPATH
 

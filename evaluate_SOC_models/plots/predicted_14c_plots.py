@@ -2,8 +2,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-from evaluate_SOC_models.observed_data import SelectedISRaDData
-from evaluate_SOC_models.data_sources import Graven2017CompiledRecordsData
+from evaluate_SOC_models.data.observed import SelectedISRaDData
+from evaluate_SOC_models.data.sources import Graven2017CompiledRecordsData
 from evaluate_SOC_models.models import \
     MENDData, MillennialData, SOMicData, CORPSEData, MIMICSData
 

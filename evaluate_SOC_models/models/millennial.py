@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import scipy.optimize
 
-from evaluate_SOC_models.model_data import ModelEvaluationData
+from .base import ModelEvaluationData
 
 
 __all__ = ['MillennialData']

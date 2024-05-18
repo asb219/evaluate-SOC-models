@@ -3,8 +3,8 @@ import numpy as np
 import pandas as pd
 from loguru import logger
 
-from evaluate_SOC_models.observed_data import SelectedISRaDData
-from evaluate_SOC_models.forcing_data import ForcingData
+from evaluate_SOC_models.data.observed import SelectedISRaDData
+from evaluate_SOC_models.data.forcing import ForcingData
 from evaluate_SOC_models.models import \
     MENDData, MillennialData, SOMicData, CORPSEData, MIMICSData
 
@@ -20,7 +20,8 @@ __all__ = [
 
 
 SORTED_MODEL_NAMES = ['MEND', 'Millennial', 'SOMic', 'CORPSE', 'MIMICS']
-SORTED_VARIABLE_NAMES = ['soc', 'bulk_14c', 'LF_14c', 'HF_14c', 'LF_c_perc', 'HF_c_perc']
+SORTED_VARIABLE_NAMES = \
+    ['soc', 'bulk_14c', 'LF_14c', 'HF_14c', 'LF_c_perc', 'HF_c_perc']
 
 
 def get_all_models():
@@ -34,11 +35,11 @@ MEND_fails = {
     ('Heckman_2018', 'HI_Andisol', 'WPL1204'), # still doesn't work
     ('McFarlane_2013', 'MA Harvard Forest', 'H4'), # still doesn't work
     ('McFarlane_2013', 'MI-Coarse UMBS', 'C7'), # still doesn't work
-    ('McFarlane_2013', 'MI-Coarse UMBS', 'D4'), # now this doesn't work....
-    #('McFarlane_2013', 'MI-Coarse UMBS', 'G3'), # WORKS NOW !!!
-    ('McFarlane_2013', 'MI-Coarse UMBS', 'O2'), # now this doesn't work....
+    ('McFarlane_2013', 'MI-Coarse UMBS', 'D4'), # new
+    #('McFarlane_2013', 'MI-Coarse UMBS', 'G3'), # works now!
+    ('McFarlane_2013', 'MI-Coarse UMBS', 'O2'), # new
     ('Schrumpf_2013', 'Hesse', 'Hesse.1'), # still doesn't work
-    #('Schrumpf_2013' 'Laqueuille' 'Laqueuille.1') # WORKS NOW !!!
+    #('Schrumpf_2013' 'Laqueuille' 'Laqueuille.1') # works now!
 }
 MEND_runs_at_first_but_then_fails = {
     ('Lemke_2006', 'Solling', 'Solling_DO_F1'), # still doesn't work
@@ -124,7 +125,7 @@ def run_all_models_all_profiles(njobs, models=None, profiles=None):
     if profiles is None:
         profiles = get_all_profiles()
 
-    # Make sure all local forcing data is ready
+    # Make sure all local forcing data are ready
     for profile in profiles:
         forc = ForcingData(*profile, save_pkl=True)
         for dataset in ['constant', 'dynamic']:
@@ -137,10 +138,9 @@ def run_all_models_all_profiles(njobs, models=None, profiles=None):
                 run_model(model, profile)
 
     else: # run on multiple cores
+        list_of_args = [(m, p) for p in profiles for m in models]
         with multiprocessing.Pool(njobs) as pool:
-            pool.map(_run_model_for_multiprocessing, [
-                (model, profile) for model in models for profile in profiles
-            ])
+            pool.map(_run_model_for_multiprocessing, list_of_args)
 
 
 
@@ -161,18 +161,18 @@ def get_results(model, profile):
 def get_results_all_profiles(model, profiles=None):
     if profiles is None:
         profiles = get_all_profiles()
-    all_results = {
+    results = {
         tuple(profile): get_results(model, profile) for profile in profiles
     }
-    all_predicted = pd.concat({
-        profile: predicted for profile,(predicted,error) in all_results.items()
+    predicted = pd.concat({
+        profile: predicted for profile, (predicted, error) in results.items()
     })
-    all_error = pd.concat({
-        profile: error for profile,(predicted,error) in all_results.items()
+    error = pd.concat({
+        profile: error for profile, (predicted, error) in results.items()
     })
-    all_predicted.index.names = ['entry_name', 'site_name', 'pro_name', 'date']
-    all_error.index.names = ['entry_name', 'site_name', 'pro_name', 'date']
-    return all_predicted, all_error
+    predicted.index.names = ['entry_name', 'site_name', 'pro_name', 'date']
+    error.index.names = ['entry_name', 'site_name', 'pro_name', 'date']
+    return predicted, error
 
 
 def get_all_results(models=None, profiles=None):
@@ -188,8 +188,9 @@ def get_all_results(models=None, profiles=None):
 def get_bias_and_rmse(error=None):
     if error is None:
         error = get_all_results()[1]
-    bias = pd.DataFrame(columns=SORTED_MODEL_NAMES, index=SORTED_VARIABLE_NAMES, dtype='float')
-    rmse = pd.DataFrame(columns=SORTED_MODEL_NAMES, index=SORTED_VARIABLE_NAMES, dtype='float')
+    columns, index = SORTED_MODEL_NAMES, SORTED_VARIABLE_NAMES
+    bias = pd.DataFrame(columns=columns, index=index, dtype='float')
+    rmse = pd.DataFrame(columns=columns, index=index, dtype='float')
     for model_name, err in error.items():
         bias[model_name] = err.mean(axis=0)
         rmse[model_name] = np.sqrt((err * err).mean(axis=0))

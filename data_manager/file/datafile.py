@@ -47,7 +47,7 @@ class DataFile(File):
     def write(self, *args, **kwargs):
         """Write data to file."""
         if self.readonly:
-            raise Exception(f'File is not writable: {self}')
+            raise Exception(f'Cannot write to read-only file: {self}')
         self.savedir.mkdir(parents=True, exist_ok=True)
         try:
             self._write(*args, **kwargs)

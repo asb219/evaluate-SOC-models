@@ -1,6 +1,6 @@
 # evaluate-SOC-models
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10575140.svg)](https://doi.org/10.5281/zenodo.10575140)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10575139.svg)](https://doi.org/10.5281/zenodo.10575139)
 
 Evaluate the performance of new-generation soil organic carbon (SOC) models
 with radiocarbon (<sup>14</sup>C) data of soil density fractions.
@@ -16,19 +16,20 @@ Evaluated models:
 
 Topsoil data from [ISRaD](https://soilradiocarbon.org) [^6] used for model evaluation:
 
-* <sup>14</sup>C content of bulk soil
-* <sup>14</sup>C content of particulate organic matter (POM, "light" density fraction)
-* <sup>14</sup>C content of mineral-associated organic matter (MAOM, "heavy" density fraction)
-* SOC stocks
-* Contribution of POM to SOC stocks
-* Contribution of MAOM to SOC stocks
+* C content of bulk soil
+* C content of particulate organic matter (POM, "light" density fraction)
+* C content of mineral-associated organic matter (MAOM, "heavy" density fraction)
+* SOC stocks and contributions of POM and MAOM to SOC stocks
 
 
 The main performance metrics are the root mean squared error and mean bias
 of model predictions with respect to the observed data from ISRaD.
 
 
-**Associated manuscript**: Brunmayr, A. S., Hagedorn, F., Moreno Duborgel, M., Minich, L. I., and Graven, H. D. (in review, 2024). Radiocarbon analysis reveals underestimation of soil organic carbon persistence in new-generation soil models. _Geosci. Model Dev. Discuss._ [preprint]. DOI: [10.5194/gmd-2023-242](https://doi.org/10.5194/gmd-2023-242).
+**Associated manuscript**:
+Brunmayr, A. S., Hagedorn, F., Moreno Duborgel, M., Minich, L. I., and Graven, H. D. (in review, 2024).
+Radiocarbon analysis reveals underestimation of soil organic carbon persistence in new-generation soil models.
+_Geosci. Model Dev. Discuss._ [preprint]. DOI: [10.5194/gmd-2023-242](https://doi.org/10.5194/gmd-2023-242).
 
 
 [^1]: Abramoff, R. Z., et al. (2022). Improved global-scale predictions of soil carbon stocks with Millennial Version 2.
@@ -66,10 +67,12 @@ _Earth System Science Data, 12_(1), 61–76. DOI: [10.5194/essd-12-61-2020](http
 
 ## Repository contents
 
-* `evaluate_SOC_models/`: contains code to run the models and produce the results
+* `evaluate_SOC_models`: contains code to run the models and produce the results
 * `produce_all_results.py`: run all models and produce plots and tables with the results
-* `dump/`: default directory for file storage
-* `MEND/`: git submodule of [my fork](https://github.com/asb219/MEND) of MEND's original repository [wanggangsheng/MEND](https://github.com/wanggangsheng/MEND)
+* `data_manager`: for easier data management, file read/write, file downloads
+* `dump`: default directory for file storage
+* `MEND`: git submodule of [my fork](https://github.com/asb219/MEND) of MEND's
+    original repository [wanggangsheng/MEND](https://github.com/wanggangsheng/MEND)
 * `config.py`: manage configurations
 * `config_defaults.ini`: default config file
 * `environment.yml`: required python and R packages
@@ -84,12 +87,12 @@ _Earth System Science Data, 12_(1), 61–76. DOI: [10.5194/essd-12-61-2020](http
 _Skip this step if you downloaded this repository from Zenodo._
 
 Clone this repository, including its submodule `MEND`, with
+
 ```
 git clone --recurse-submodules https://github.com/asb219/evaluate-SOC-models.git
 ```
 
 Now the repository should be in a directory named `evaluate-SOC-models`.
-
 Move into that directory with `cd evaluate-SOC-models`.
 
 
@@ -221,7 +224,7 @@ please raise an [issue](https://github.com/asb219/evaluate-SOC-models/issues) on
 
 The MEND model experiences some numerical stability issues when run
 with the forcing data associated with some of the soil profiles.
-I am currently preventing MEND to run on 12 blacklisted profiles which fail on my computer,
+I am currently preventing MEND from running on 12 blacklisted profiles which fail on my computer,
 but the exact list of profiles incompatible with MEND seems to depend on the Fortran compiler.[^7]
 
 If MEND does not work for a specific soil profile on your computer, just

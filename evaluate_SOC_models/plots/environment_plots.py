@@ -1,11 +1,11 @@
 import numpy as np
 import pandas as pd
 import scipy.optimize
-#import scipy.stats
+import scipy.stats
 import matplotlib.pyplot as plt
 
-from evaluate_SOC_models.observed_data import AllObservedData
-from evaluate_SOC_models.forcing_data import ForcingData
+from evaluate_SOC_models.data.observed import AllObservedData
+from evaluate_SOC_models.data.forcing import ForcingData
 from evaluate_SOC_models.results import \
     SORTED_MODEL_NAMES, get_all_profiles, get_all_results
 

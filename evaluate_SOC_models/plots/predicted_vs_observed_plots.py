@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from evaluate_SOC_models.observed_data import AllObservedData
+from evaluate_SOC_models.data.observed import AllObservedData
 from evaluate_SOC_models.results import \
     SORTED_MODEL_NAMES, get_all_models, get_results_all_profiles, get_all_results
 

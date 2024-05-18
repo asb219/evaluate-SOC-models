@@ -1,10 +1,10 @@
 import numpy as np
 import pandas as pd
 
-from evaluate_SOC_models.data_manager import Data
+from data_manager import Data
 
-from evaluate_SOC_models.observed_data import SelectedISRaDData
-from evaluate_SOC_models.data_sources import \
+from evaluate_SOC_models.data.observed import SelectedISRaDData
+from evaluate_SOC_models.data.sources import \
     SoilGridsPointData, CESM2LEOutputData, ISIMIP2aNitrogenDepositionData
 
 from evaluate_SOC_models.path import SAVEOUTPUTPATH, SAVEALLDATAPATH

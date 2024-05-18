@@ -1,11 +1,15 @@
+"""
+Defines base class `ModelEvaluationData` for output data of all models.
+"""
+
 import pandas as pd
 import scipy.optimize
 from loguru import logger
 
-from evaluate_SOC_models.data_manager import Data
+from data_manager import Data
 
-from evaluate_SOC_models.observed_data import ObservedData
-from evaluate_SOC_models.forcing_data import ForcingData
+from evaluate_SOC_models.data.observed import ObservedData
+from evaluate_SOC_models.data.forcing import ForcingData
 from evaluate_SOC_models.path import SAVEOUTPUTPATH
 
 

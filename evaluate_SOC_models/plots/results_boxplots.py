@@ -2,8 +2,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+from evaluate_SOC_models.data.observed import AllObservedData
 from evaluate_SOC_models.results import SORTED_MODEL_NAMES, get_all_results
-from evaluate_SOC_models.observed_data import AllObservedData
 
 from .utils import _save_show_close
 

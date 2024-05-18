@@ -3,7 +3,7 @@ import json
 import urllib
 from loguru import logger
 
-from evaluate_SOC_models.data_manager import (
+from data_manager import (
     DataFile,
     FileFromDownload,
     FileFromURL,
@@ -95,7 +95,7 @@ class MIMICS2021CodeFiles(FileGroupFromArchive):
         self.archive = archive
 
 
-class MIMICS2021ModifiedSourceCode(FileFrom):
+class MIMICS2021ModifiedSourceCodeFile(FileFrom):
 
     def __init__(self):
         filename = 'vsoilmic05f_ms25_modified.f90'
@@ -158,7 +158,7 @@ class MIMICS2021ExecutableFile(FileFrom):
 
     def compile(self):
         for_file = MIMICS2021CodeFiles().claim()['test01.for']
-        f90_file = MIMICS2021ModifiedSourceCode().claim()
+        f90_file = MIMICS2021ModifiedSourceCodeFile().claim()
         command = f'gfortran -o {self} {for_file} {f90_file}'
         return subprocess.check_call(command, shell=True)
 

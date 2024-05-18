@@ -1,8 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from evaluate_SOC_models.data_manager.data import Data
-from evaluate_SOC_models.data_manager.file import XarrayNetCDFFile, FileFromURL
+from data_manager import Data, XarrayNetCDFFile, FileFromURL
 
 from evaluate_SOC_models.path import DOWNLOADPATH, DATAPATH
 
@@ -30,7 +29,8 @@ class ISIMIP2aNitrogenDepositionInputFile(XarrayNetCDFFile, FileFromURL):
 
     Units: gN/m2/month
 
-    Data source: Hanqin Tian and Jia Yang, 2018, https://doi.org/10.1175/BAMS-D-17-0212.1
+    Data source: Hanqin Tian and Jia Yang, 2018,
+    https://doi.org/10.1175/BAMS-D-17-0212.1
     """
 
     def __init__(self, species):
@@ -59,8 +59,10 @@ class ISIMIP2aNitrogenDepositionInputFile(XarrayNetCDFFile, FileFromURL):
         kwargs['decode_times'] = False
         ds = super()._read(**kwargs)
         months, since, ref_date, ref_time = ds.time.units.split()
-        ds['time'] = pd.date_range(start=ref_date, periods=ds.sizes['time'], freq='MS')
-        ds['time'] = ds.time.assign_attrs(standard_name='time', long_name='time', axis='T')
+        ds['time'] = pd.date_range(
+            start=ref_date, periods=ds.sizes['time'], freq='MS')
+        ds['time'] = ds['time'].assign_attrs(
+            standard_name='time', long_name='time', axis='T')
         return ds
 
 
@@ -71,7 +73,8 @@ class ISIMIP2aNitrogenDepositionData(Data):
 
     datasets = ['NHx', 'NOy']
 
-    def __init__(self, lat, lon, *, save_pkl=True, save_csv=False, save_xlsx=False):
+    def __init__(self, lat, lon, *,
+            save_pkl=True, save_csv=False, save_xlsx=False):
 
         lat = np.round(float(lat),2)
         lon = np.round(float(lon),2)

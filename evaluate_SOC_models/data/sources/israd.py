@@ -3,9 +3,8 @@ import re
 import numpy as np
 import pandas as pd
 
-from evaluate_SOC_models.data_manager.data import Data
-from evaluate_SOC_models.data_manager.file import ZipArchive, FileFromURL
-from evaluate_SOC_models.data_manager.file import PandasExcelFile, FileFromArchive
+from data_manager import \
+    Data, ZipArchive, FileFromURL, FileFromArchive, PandasExcelFile
 
 from evaluate_SOC_models.path import DOWNLOADPATH, DATAPATH
 
@@ -105,7 +104,8 @@ class ISRaDData(Data):
         topsoil_min_depth = int(np.round(topsoil_min_depth, 0))
         topsoil_max_depth = int(np.round(topsoil_max_depth, 0))
 
-        assert topsoil_min_depth < topsoil_max_depth, f'{topsoil_min_depth} < {topsoil_max_depth}'
+        assert topsoil_min_depth < topsoil_max_depth, \
+            f'{topsoil_min_depth} < {topsoil_max_depth}'
 
         savedir = DATAPATH / 'ISRaD'
         name = 'israd'
