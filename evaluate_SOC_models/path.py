@@ -12,8 +12,9 @@ absolute_path = lambda x: REPOSITORYPATH / Path(config['path'][x]).expanduser()
 DUMPPATH = absolute_path('dump')
 DOWNLOADPATH = absolute_path('downloads')
 DATAPATH = absolute_path('data')
-LOGPATH = absolute_path('log')
 RESULTSPATH = absolute_path('results')
+LOGPATH = absolute_path('log')
+LOGFILEPATH = LOGPATH / config['log']['filename']
 
 TOPSOIL_MIN_DEPTH = int(config['topsoil']['min_depth'])
 TOPSOIL_MAX_DEPTH = int(config['topsoil']['max_depth'])
@@ -22,4 +23,4 @@ SAVEPATH = RESULTSPATH / \
 SAVEOUTPUTPATH = SAVEPATH / 'model-output'
 SAVEALLDATAPATH = SAVEPATH / 'data'
 
-del config, absolute_path
+del Path, get_config, config, absolute_path

@@ -1,9 +1,9 @@
 import sys
 import os
-from pathlib import Path
 from loguru import logger
 
 from evaluate_SOC_models.config import get_config
+from evaluate_SOC_models.path import LOGFILEPATH
 
 
 __all__ = [
@@ -101,16 +101,12 @@ def enable_logfile_logging():
 
     logger.debug('enabling logfile logging ...')
 
-    config = get_config()
-    logpath = Path(config['path']['log']).expanduser().resolve()
-    logfilename = config['log']['filename']
-
     if logfile_handler_id is not None:
         logger.info('logfile logging already enabled')
         return
 
     logfile_handler_id = logger.add(
-        str(logpath / logfilename),
+        str(LOGFILEPATH),
         level='DEBUG', # 'TRACE'
         format="{time:YYYY-MM-DD HH:mm:ss} | {name} | {level} :: {message}",
         opener=lambda file, flags: os.open(file, flags, 0o600),

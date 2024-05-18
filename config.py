@@ -9,14 +9,14 @@ if __name__ == '__main__':
     import argparse
     from loguru import logger
 
-    from evaluate_SOC_models.path import DUMPPATH
-    from evaluate_SOC_models import config
     import evaluate_SOC_models.logging
+    from evaluate_SOC_models import config
+    from evaluate_SOC_models.path import DUMPPATH, LOGFILEPATH
 
 
     parser = argparse.ArgumentParser(
-        prog='evaluate_SOC_models.config',
-        description='Set configurations in the config.ini file',
+        prog='python -m config',
+        description='Manage configurations for `evaluate_SOC_models` package.',
         epilog=''
     )
     parser.add_argument('-print', action='store_true',
@@ -24,17 +24,21 @@ if __name__ == '__main__':
     parser.add_argument('-reset', action='store_true',
         help='remove config.ini file and exit')
     parser.add_argument('-get-dump', action='store_true',
-        help='print path of file storage dump and exit')
-    parser.add_argument('-set-dump', help='set path of file storage dump')
-    parser.add_argument('-set-quiet', action='store_true',
-        help='disable logging to console')
-    parser.add_argument('-set-verbose', action='store_true',
-        help='enable logging to console')
+        help='print absolute path of file storage dump and exit')
+    parser.add_argument('-set-dump', metavar='DUMP',
+        help='set path of file storage dump')
+    parser.add_argument('-log-status', action='store_true',
+        help='print status of console and logfile logging and exit')
+    parser.add_argument('-get-logfile', action='store_true',
+        help='print absolute path of logfile and exit')
     parser.add_argument('-disable-log', action='store_true',
         help='disable logging to logfile')
     parser.add_argument('-enable-log', action='store_true',
         help='enable logging to logfile')
-    # parser.add_argument('-logfile', help='set filename of logfile')
+    parser.add_argument('-set-quiet', action='store_true',
+        help='disable logging to console')
+    parser.add_argument('-set-verbose', action='store_true',
+        help='enable logging to console')
 
     if len(sys.argv) == 1: # `python -m config` was run without arguments
         parser.print_help()
@@ -55,6 +59,12 @@ if __name__ == '__main__':
         config.reset_defaults()
     elif args.get_dump:
         print(DUMPPATH)
+    elif args.log_status:
+        status = config.get_config()['log']
+        print('Logging to console is '+status['console'].strip().lower()+'.')
+        print('Logging to logfile is '+status['logfile'].strip().lower()+'.')
+    elif args.get_logfile:
+        print(LOGFILEPATH)
     else:
         if args.set_dump:
             config.set_dump_path(args.set_dump)
@@ -66,7 +76,5 @@ if __name__ == '__main__':
             config.disable_log()
         if args.enable_log:
             config.enable_log()
-        # if args.logfile:
-        #     config.set_log_filename(args.logfile)
 
     config.ASK_TO_RESTART_KERNEL = True
