@@ -1,3 +1,24 @@
+"""
+CESM2 Large Ensemble (CESM2-LE) output data.
+
+Citation for CESM2-LE dataset:
+    IBS Center for Climate Physics, et al. (2021). "CESM2 Large
+    Ensemble Community Project". UCAR/NCAR Climate Data Gateway.
+    https://doi.org/10.26024/KGMP-C556
+
+Citation for CESM2:
+    Danabasoglu, G., et al. (2020). "The Community Earth System Model
+    Version 2 (CESM2)". Journal of Advances in Modeling Earth Systems, 12.
+    https://doi.org/10.1029/2019MS001916
+
+
+Copyright (C) 2024  Alexander S. Brunmayr  <asb219@ic.ac.uk>
+
+This file is part of the ``evaluate_SOC_models`` python package, subject to
+the GNU General Public License v3 (GPLv3). You should have received a copy
+of GPLv3 along with this file. If not, see <https://www.gnu.org/licenses/>.
+"""
+
 from functools import reduce
 import numpy as np
 import pandas as pd

@@ -16,9 +16,9 @@ Evaluated models:
 
 Topsoil data from [ISRaD](https://soilradiocarbon.org) [^6] used for model evaluation:
 
-* C content of bulk soil
-* C content of particulate organic matter (POM, "light" density fraction)
-* C content of mineral-associated organic matter (MAOM, "heavy" density fraction)
+* <sup>14</sup>C content of bulk soil
+* <sup>14</sup>C content of particulate organic matter (POM, "light" density fraction)
+* <sup>14</sup>C content of mineral-associated organic matter (MAOM, "heavy" density fraction)
 * SOC stocks and contributions of POM and MAOM to SOC stocks
 
 

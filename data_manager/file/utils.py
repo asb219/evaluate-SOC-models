@@ -1,3 +1,4 @@
+# Copyright (c) 2024 Alexander S. Brunmayr. Subject to the MIT license.
 
 def yes_no_question(question, default=None):
     """Ask yes/no question and record user input.

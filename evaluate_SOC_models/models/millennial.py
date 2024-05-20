@@ -1,4 +1,29 @@
-""" Adapted from https://github.com/rabramoff/Millennial """
+"""
+Radiocarbon implementation of Millennial v2 (Abramoff et al., 2022).
+
+Function `derivs_V2_MM` is modified from R-code in "R/models/derivs_V2_MM.R"
+(Abramoff & Xu, 2022), and fitted parameter values are from file "Fortran/
+MillennialV2/simulationv2/soilpara_in_fit.txt" (Abramoff & Xu, 2022).
+
+* Source code of Millennial v2:
+    Abramoff, R., & Xu, X. (2022). "rabramoff/Millennial: First release
+    of Millennial V2 (Version v2)". Zenodo.
+    https://doi.org/10.5281/zenodo.6353519
+
+* Associated manuscript:
+    Abramoff, R. Z., et al. (2022). "Improved global-scale predictions of
+    soil carbon stocks with Millennial Version 2". Soil Biology and
+    Biochemistry, 164, 108466. https://doi.org/10.1016/j.soilbio.2021.108466
+
+
+Original work Copyright (C) 2022  Rose Abramoff & Xiaofeng Xu  (MIT license)
+
+Modified work Copyright (C) 2024  Alexander S. Brunmayr  <asb219@ic.ac.uk>
+
+This file is part of the ``evaluate_SOC_models`` python package, subject to
+the GNU General Public License v3 (GPLv3). You should have received a copy
+of GPLv3 along with this file. If not, see <https://www.gnu.org/licenses/>.
+"""
 
 import numpy as np
 import pandas as pd
@@ -11,7 +36,8 @@ __all__ = ['MillennialData']
 
 
 def derivs_V2_MM(state, parameters, forcing, spinup=False):
-    """ Most of the code and comments in this method are taken from
+    """
+    Most of the code and comments in this method are taken from
     https://github.com/rabramoff/Millennial/blob/v2/R/models/derivs_V2_MM.R
 
     Original_docstring = '''

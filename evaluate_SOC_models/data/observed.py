@@ -1,3 +1,13 @@
+"""
+Observed data for model validation.
+
+Copyright (C) 2024  Alexander S. Brunmayr  <asb219@ic.ac.uk>
+
+This file is part of the ``evaluate_SOC_models`` python package, subject to
+the GNU General Public License v3 (GPLv3). You should have received a copy
+of GPLv3 along with this file. If not, see <https://www.gnu.org/licenses/>.
+"""
+
 import numpy as np
 import pandas as pd
 import scipy
@@ -5,7 +15,8 @@ from numba import njit
 
 from data_manager import Data
 
-from evaluate_SOC_models.data.sources import ISRaDData, Graven2017CompiledRecordsData
+from evaluate_SOC_models.data.sources import ISRaDData
+from evaluate_SOC_models.data.sources import Graven2017CompiledRecordsData
 from evaluate_SOC_models.path import TOPSOIL_MIN_DEPTH, TOPSOIL_MAX_DEPTH
 from evaluate_SOC_models.path import SAVEOUTPUTPATH, SAVEALLDATAPATH
 
@@ -35,7 +46,6 @@ class SelectedISRaDData(Data):
 
         # Drop profiles where there is no 14C data for the fractions
         df = df.dropna(how='all', subset=['HF_14c', 'fLF_14c', 'oLF_14c'])
-        #df = df.dropna(how='all', subset=['HF_c_perc', 'fLF_c_perc', 'oLF_c_perc'])
 
         # Fill missing bulk 14C from integrated fraction data
         _14c = df[['HF_14c', 'fLF_14c', 'oLF_14c']].values
@@ -54,7 +64,7 @@ class SelectedISRaDData(Data):
         ) / df['LF_c_perc']
 
         # Add information from pro_info, site_info, entry_info
-        pro_info = israd['pro_info'][[
+        df = df.join(israd['pro_info'][[
             'pro_peatland',
             'pro_permafrost',
             'pro_thermokarst',
@@ -64,16 +74,13 @@ class SelectedISRaDData(Data):
             'pro_land_cover',
             'pro_lc_phenology',
             'pro_lc_leaf_type',
-        ]]
-        df = df.join(pro_info)
-
-        site_info = israd['site_info'][['site_lat', 'site_long', 'site_elevation']]
-        df = df.join(site_info)
-
-        entry_info = israd['entry_info'][[
+        ]])
+        df = df.join(israd['site_info'][[
+            'site_lat', 'site_long', 'site_elevation'
+        ]])
+        df = df.join(israd['entry_info'][[
             'doi', 'compilation_doi', 'bibliographical_reference'
-        ]]
-        df = df.join(entry_info)
+        ]])
 
         return df.copy()
 
@@ -104,11 +111,12 @@ class AllObservedData(Data):
         # like in Shi et al. (2020) https://doi.org/10.1038/s41561-020-0596-z
         # and Heckman et al. (2021) https://doi.org/10.1111/gcb.16023
 
+        model = _one_pool_steady_state_model
         zones = ISRaDData().pro_info['pro_atm_zone'].str[:-3]
         F_atmosphere = Graven2017CompiledRecordsData()['F14C']
 
         def error(k, obs_year, obs_Delta14C, years, F_input):
-            return abs(_one_pool_steady_state_model(k, obs_year, years, F_input) - obs_Delta14C)
+            return abs(model(k, obs_year, years, F_input) - obs_Delta14C)
 
         def normalize_to_2000(row):
             row = row.copy()
@@ -118,12 +126,15 @@ class AllObservedData(Data):
             obs_year = row['date'].year
             for fraction in ('bulk', 'HF', 'LF', 'fLF', 'oLF'):
                 obs_Delta14C = row[fraction+'_14c']
-                result = scipy.optimize.minimize(error, x0=0.01, bounds=[(1e-6, 1)],
-                    args=(obs_year, obs_Delta14C, years, F_input), method='Nelder-Mead')
+                result = scipy.optimize.minimize(
+                    error, x0=0.01, bounds=[(1e-6, 1)],
+                    args=(obs_year, obs_Delta14C, years, F_input),
+                    method='Nelder-Mead'
+                )
                 k, = result.x
                 row[fraction+'_k'] = k
                 row[fraction+'_success'] = result.success
-                row[fraction+'_14c_2000'] = _one_pool_steady_state_model(k, 2000, years, F_input)
+                row[fraction+'_14c_2000'] = model(k, 2000, years, F_input)
             return row
 
         obs = obs.apply(normalize_to_2000, axis=1)

@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Alexander S. Brunmayr. Subject to the MIT license.
+
 from fnmatch import fnmatch
 from pathlib import Path
 

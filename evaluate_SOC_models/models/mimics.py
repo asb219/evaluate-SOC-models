@@ -1,4 +1,28 @@
-"""Based on "MIMICS-CN_forRelease.Rmd" at https://zenodo.org/records/3534562"""
+"""
+Radiocarbon implementation of MIMICS-CN v1.0 (Kyker-Snowman et al., 2020).
+
+Functions `initialize_pools`, `get_parameters`, `FXEQ` in this file are
+modified from R-code in "MIMICS-CN_forRelease.Rmd" (Kyker-Snowman, 2019).
+
+* Source code of MIMICS-CN v1.0:
+    Kyker-Snowman, E. (2019). "EmilyKykerSnowman/MIMICS-CN-for-publication
+    v1.0" (v1.0). Zenodo. https://doi.org/10.5281/zenodo.3534562
+
+* Associated manuscript:
+    Kyker-Snowman, E., et al. (2020). "Stoichiometrically coupled carbon and
+    nitrogen cycling in the MIcrobial-MIneral Carbon Stabilization model
+    version 1.0 (MIMICS-CN v1.0)". Geoscientific Model Development, 13(9),
+    4413–4434. https://doi.org/10.5194/gmd-13-4413-2020
+
+
+Original work Copyright (C) 2020  Emily Kyker-Snowman  (no license specified)
+
+Modified work Copyright (C) 2024  Alexander S. Brunmayr  <asb219@ic.ac.uk>
+
+This file is part of the ``evaluate_SOC_models`` python package, subject to
+the GNU General Public License v3 (GPLv3). You should have received a copy
+of GPLv3 along with this file. If not, see <https://www.gnu.org/licenses/>.
+"""
 
 import numpy as np
 import pandas as pd
@@ -12,7 +36,10 @@ __all__ = ['MIMICSData']
 
 
 def initialize_pools():
-    """Copied and adapted from `initializePools` function"""
+    """
+    Copied and adapted from `initializePools` function
+    in "MIMICS-CN_forRelease.Rmd" (Kyker-Snowman, 2019).
+    """
 
     LIT_1 = 1
     LIT_2 = 1
@@ -57,30 +84,32 @@ def initialize_pools():
 
 
 def get_parameters(annual_NPP_C, clay_pct, Tsoil, input_lignin_pct, input_CN):
-    """ All parameter values and comments are from `siteSpecificParameters`
-    Comments with double-hash ## are lines of code removed by asb219
+    """
+    All parameter values and comments are from `siteSpecificParameters`
+    in "MIMICS-CN_forRelease.Rmd" (Kyker-Snowman, 2019).
+    Comments with double-hash ## are lines of code removed by asb219.
     """
 
-    ##ANPP_C  = LTERdata$ANPP / 2       # convert to gC/m2/y from g/m2/y
+    ## ANPP_C  = LTERdata$ANPP / 2       # convert to gC/m2/y from g/m2/y
     ANPP_C  = annual_NPP_C
-    ##strSite = as.character(LTERdata$Site)  #convert site names to string
-    ##nsites  = length(strSite)
-    ##npts   = 6*10*14 #6 litter * 10 years * 14 sites
+    ## strSite = as.character(LTERdata$Site)  #convert site names to string
+    ## nsites  = length(strSite)
+    ## npts   = 6*10*14 #6 litter * 10 years * 14 sites
     clay  = clay_pct/100 ##LTERdata$CLAY2/100 
     tsoi  = Tsoil ##LTERdata$MAT
-    ##nsites = length(LTERdata$Site)
+    ## nsites = length(LTERdata$Site)
     lig   = input_lignin_pct/100 #LTERdata$LIG/100
     Nnew  = 1/input_CN/2.5 #1/LTERdata$CN/2.5             #N in litter additions
     fMET1 = 0.85 - 0.013 * lig / Nnew    #as partitioned in Daycent
 
     #Parameters related to inputs
     EST_LIT_in  = ANPP_C / (365*24)   #gC/m2/h (from g/m2/y, Knapp et al. Science 2001)
-    ##BAG_LIT_in  = 100      #gC/m2/h
+    ## BAG_LIT_in  = 100      #gC/m2/h
     soilDepth       = 30  ## leave this as such!!
-    ##h2y         = 24*365
-    ##MICROtoECO  = soilDepth * 1e4 * 1e6 / 1e6   #mgC/cm3 to kgC/km2
+    ## h2y         = 24*365
+    ## MICROtoECO  = soilDepth * 1e4 * 1e6 / 1e6   #mgC/cm3 to kgC/km2
     EST_LIT     = EST_LIT_in  * 1e3 / 1e4    #mgC/cm2/h 
-    ##BAG_LIT     = BAG_LIT_in  * 1e3 / 1e4    #mgC/cm2/h
+    ## BAG_LIT     = BAG_LIT_in  * 1e3 / 1e4    #mgC/cm2/h
     fMET        = fMET1
     Inputs        = np.empty(2, np.float64)           #Litter inputs to MET/STR
     Inputs[0]     = (EST_LIT / soilDepth) * fMET      #partitioned to layers
@@ -107,7 +136,7 @@ def get_parameters(annual_NPP_C, clay_pct, Tsoil, input_lignin_pct, input_CN):
     NUE        = .85         #Nitrogen stoichiometry of fixed pools
     CN_m        = 15
     CN_s        = (input_CN-CN_m*fMET)/(1-fMET)
-    ##CN_s_BAG    =  (bagCN-CN_m*bagMET)/(1-bagMET)
+    ## CN_s_BAG    =  (bagCN-CN_m*bagMET)/(1-bagMET)
     CN_r        =6#5
     CN_K        =10#8
 
@@ -189,7 +218,10 @@ def FXEQ(state, Fm_input,
         Inputs, VMAX, KM, CUE, fPHYS, fCHEM, fAVAI, FI, turnover, desorb,
         KO, NUE, CN_m, CN_s, CN_r, CN_K, Nleak, densDep):
     """
-    Most of the code is copied and adapted from the `FXEQ` function.
+    Most of the code is copied and adapted from the `FXEQ` function
+    in "MIMICS-CN_forRelease.Rmd" (Kyker-Snowman, 2019).
+    Addition by asb219: 14C implementation (last 4 blocks of code).
+    
     All comments starting with a single # are from the original code.
     Comments starting with ## are by asb219.
     """
@@ -303,7 +335,7 @@ def FXEQ(state, Fm_input,
     dDIN = dDIN-LeachingLoss #N leaching losses
 
 
-    ####### The following 4 blocks of code were added by asb219 #######
+    ## ############ Start of code added by asb219 ############
 
     ## Fraction modern
     Fm_LIT_1 = LIT_1_14C / LIT_1
@@ -341,7 +373,7 @@ def FXEQ(state, Fm_input,
     dSOM_3_14C = MICtrn_3_14C + MICtrn_6_14C + DEsorb_14C + OXIDAT_14C - SOMmin_1_14C - SOMmin_2_14C
     
     ## Radioactive decay of 14C
-    decay14C = np.log(2)/5730 / (365*24) # per hour
+    decay14C = np.log(2)/5730 / (365*24) ## per hour
     dLIT_1_14C -= LIT_1_14C * decay14C
     dLIT_2_14C -= LIT_2_14C * decay14C
     dMIC_1_14C -= MIC_1_14C * decay14C
@@ -349,7 +381,8 @@ def FXEQ(state, Fm_input,
     dSOM_1_14C -= SOM_1_14C * decay14C
     dSOM_2_14C -= SOM_2_14C * decay14C
     dSOM_3_14C -= SOM_3_14C * decay14C
-    ##########################################################
+
+    ## ############ End of code added by asb219 ############
 
 
     return np.array([

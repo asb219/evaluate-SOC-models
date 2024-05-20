@@ -1,3 +1,25 @@
+"""
+Download, modify, and execute the MIMICS model (Wang et al., 2021).
+
+* Source code of MIMICS:
+    Wang, Y. (2020). "Vertically resolved soil carbon model (model codes and
+    site data)". v1. CSIRO Data Collection. https://doi.org/10.25919/843a-w584
+    Distributed under the CSIRO Data Licence:
+    https://research.csiro.au/dap/licences/csiro-data-licence/
+
+* Associated manuscript:
+    Wang Y-P, et al. (2021). "Microbial Activity and Root Carbon Inputs Are
+    More Important than Soil Carbon Diffusion in Simulating Soil Carbon
+    Profiles". JGR-BGS, 126. https://doi.org/10.1029/2020JG006205
+
+
+Copyright (C) 2024  Alexander S. Brunmayr  <asb219@ic.ac.uk>
+
+This file is part of the ``evaluate_SOC_models`` python package, subject to
+the GNU General Public License v3 (GPLv3). You should have received a copy
+of GPLv3 along with this file. If not, see <https://www.gnu.org/licenses/>.
+"""
+
 import subprocess
 import json
 import urllib
@@ -25,11 +47,13 @@ class JSONFile(DataFile):
 
     def _write(self, data, **kwargs):
         with self.path.open('w') as f:
-            return json.dump(data, f)
+            json.dump(data, f)
 
 
 class CSIRORequestJSONFile(JSONFile, FileFromDownload):
     """
+    Facilitates requests from the CSIRO Data Access Portal.
+    
     Based on tutorial:
     https://confluence.csiro.au/display/dap/DAP+Web+Services+-+Python+Examples
     """
@@ -49,15 +73,8 @@ class CSIRORequestJSONFile(JSONFile, FileFromDownload):
 
 class MIMICS2021CodeArchive(FileFromURL, SevenZipArchive):
     """
-    Wang Y-P (2020),
-    "Vertically resolved soil carbon model (model codes and site data)"
+    Source code archive of MIMICS (Wang et al., 2021) from CSIRO.
     https://data.csiro.au/collection/csiro:47942v1
-    
-    Associated to research article:
-    Wang Y-P, et al. (2021)
-    "Microbial Activity and Root Carbon Inputs Are More Important than
-    Soil Carbon Diffusion in Simulating Soil Carbon Profiles", JGR-BGS.
-    DOI 10.1029/2020JG006205
     """
 
     doi = '10.25919/843a-w584'
@@ -96,6 +113,11 @@ class MIMICS2021CodeFiles(FileGroupFromArchive):
 
 
 class MIMICS2021ModifiedSourceCodeFile(FileFrom):
+    """
+    Slightly modified Fortran-90 source code of MIMICS (Wang et al., 2021)
+    such that it outputs 12C and 14C stocks for each year of
+    the simulation instead of only for the year of measurement.
+    """
 
     def __init__(self):
         filename = 'vsoilmic05f_ms25_modified.f90'
@@ -106,8 +128,8 @@ class MIMICS2021ModifiedSourceCodeFile(FileFrom):
 
     def modify_source_code(self):
         """
-        Modify source code so that MIMICS2021 outputs 12C and 14C stocks
-        for each year.
+        Modify source code so that MIMICS outputs 12C and 14C stocks
+        every year into files 'out12.txt' and 'out14.txt', respectively.
         """
         original_file = MIMICS2021CodeFiles()['vsoilmic05f_ms25.f90'].claim()
         code = original_file.path.read_text()

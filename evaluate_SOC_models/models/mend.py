@@ -1,3 +1,30 @@
+"""
+Radiocarbon implementation and python interface for modified source
+code (Wang & Brunmayr, 2024) of MEND model (Wang et al., 2022).
+
+* Modified source code of MEND:
+    Wang, G., & Brunmayr, A. S. (2024). "Microbial-ENzyme Decomposition
+    (MEND) model – GitHub fork asb219/MEND (v1.1 (MEND-new-asb219))".
+    Zenodo. https://doi.org/10.5281/zenodo.11065513
+
+* Original source code of MEND:
+    Wang, G. (2024). "Microbial-ENzyme Decomposition (MEND) model (commit
+    92323c7 in https://github.com/wanggangsheng/MEND)". Zenodo.
+    https://doi.org/10.5281/zenodo.10576665
+
+* Associated manuscript:
+    Wang, G., et al. (2022). "Soil enzymes as indicators of soil function:
+    A step toward greater realism in microbial ecological modeling". Global
+    Change Biology, 28(5), 1935–1950. https://doi.org/10.1111/gcb.16036
+
+
+Copyright (C) 2024  Alexander S. Brunmayr  <asb219@ic.ac.uk>
+
+This file is part of the ``evaluate_SOC_models`` python package, subject to
+the GNU General Public License v3 (GPLv3). You should have received a copy
+of GPLv3 along with this file. If not, see <https://www.gnu.org/licenses/>.
+"""
+
 import subprocess
 import numpy as np
 import pandas as pd
@@ -657,12 +684,12 @@ class MENDData(ModelEvaluationData):
 
     def _execute_mend(self, run):
         """
-        Execute mend. This will write files into the output directory.
+        Execute "mend". This will write files into the output directory.
 
         Returns
         -------
         int
-            exit code of mend, zero means success
+            exit code of "mend", zero means success
 
         Raises
         ------

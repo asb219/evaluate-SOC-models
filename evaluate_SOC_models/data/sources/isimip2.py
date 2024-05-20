@@ -1,3 +1,25 @@
+"""
+Nitrogen deposition data from the ISIMIP repository https://data.isimip.org
+
+Citation for nitrogen deposition data:
+    Tian, H., et al. (2018): "The Global N2O Model Intercomparison Project".
+    Bulletin of the American Meteorological Society, 99, 1231–1251.
+    https://doi.org/10.1175/BAMS-D-17-0212.1
+
+Citation for ISIMIP repository:
+    Rosenzweig, C., et al. (2017). "Assessing inter-sectoral climate change
+    risks: the role of ISIMIP". Environmental Research Letters, 12, 010 301.
+    https://doi.org/10.1088/1748-9326/12/1/010301
+    https://data.isimip.org
+
+
+Copyright (C) 2024  Alexander S. Brunmayr  <asb219@ic.ac.uk>
+
+This file is part of the ``evaluate_SOC_models`` python package, subject to
+the GNU General Public License v3 (GPLv3). You should have received a copy
+of GPLv3 along with this file. If not, see <https://www.gnu.org/licenses/>.
+"""
+
 import numpy as np
 import pandas as pd
 

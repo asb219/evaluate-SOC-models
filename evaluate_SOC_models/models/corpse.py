@@ -1,4 +1,31 @@
-""" Adapted from https://github.com/bsulman/CORPSE-fire-response """
+"""
+Radiocarbon implementation of the CORPSE model (Sulman et al., 2014).
+
+Adapted and modified from CORPSE-fire-response (Sulman, 2024a),
+and using some parameter values from CORPSE-N (Sulman, 2024b).
+
+* Source code of CORPSE-fire-response:
+    Sulman, B. (2024a). "bsulman/CORPSE-fire-response: v1.0 (v1.0)".
+    Zenodo. https://doi.org/10.5281/zenodo.10624992
+
+* Source code of CORPSE-N:
+    Sulman, B. (2024b). "bsulman/CORPSE-N: v1.0 (v1.0)". Zenodo.
+    https://doi.org/10.5281/zenodo.10624990
+
+* Associated manuscript:
+    Sulman, B. N., et al. (2014). "Microbe-driven turnover offsets mineral-
+    mediated storage of soil carbon under elevated CO2." Nature Climate
+    Change, 4(12), 1099–1102. https://doi.org/10.1038/nclimate2436
+
+
+Original work Copyright (C) 2024  Benjamin Sulman  (subject to CC BY 4.0)
+
+Modified work Copyright (C) 2024  Alexander S. Brunmayr  <asb219@ic.ac.uk>
+
+This file is part of the ``evaluate_SOC_models`` python package, subject to
+the GNU General Public License v3 (GPLv3). You should have received a copy
+of GPLv3 along with this file. If not, see <https://www.gnu.org/licenses/>.
+"""
 
 import numpy as np
 import pandas as pd
@@ -67,9 +94,9 @@ class CORPSEData(ModelEvaluationData):
         delta_t = 1./365 # time units are years but take daily time steps
 
         # MODEL PARAMETERS
-        # All variable names like in bsulman/CORPSE-fire-response
-        # Parameter values from bsulman/CORPSE-fire-response/Whitman_sims.py
-        # Parameter description in docstring of self.get_internal_flux_matrix
+        # All variable names like in CORPSE-fire-response
+        # Parameter values from Whitman_sims.py in CORPSE-fire-response
+        # See parameter descriptions in docstring of `get_internal_flux_matrix`
         # Arrays are ordered like ['fast', 'slow', 'necro']
         vmaxref = np.array([9.0, 0.25, 4.5]) # 1/year
         Ea = np.array([5e3, 30e3, 5e3]) # J/mol
@@ -175,54 +202,51 @@ class CORPSEData(ModelEvaluationData):
 
     def get_internal_flux_matrix(self,
             vmaxref, Ea, kC, gas_diffusion_exp, substrate_diffusion_exp,
-            minMicrobeC, Tmic, et, eup, tProtected, protection_rate
-        ):
+            minMicrobeC, Tmic, et, eup, tProtected, protection_rate):
         """
-        Almost all variable names are like in bsulman/CORPSE-fire-response
+        Almost all variable names are like in CORPSE-fire-response
         Arrays of shape (3,) are ordered like ['fast', 'slow', 'necro']
         Arrays of shape (7,) are ordered like ['MB', 'Ufast', 'Uslow', 'Unecr',
                                                'Pfast', 'Pslow', 'Pnecr']
 
         Parameters
         ----------
-        vmaxref: numpy.ndarray of shape (3,)
+        vmaxref : numpy.ndarray of shape (3,)
             max decomposition rate (1/year) at 20°C for each unprotected pool
-        Ea: numpy.ndarray of shape (3,)
+        Ea : numpy.ndarray of shape (3,)
             activation energy (J/mol) for decomposition of each unprotected pool
-        kC: float
+        kC : float
             Michaelis-Menten half-saturation constant (g microbial biomass / g substrate)
-        gas_diffusion_exp: float
+        gas_diffusion_exp : float
             determines suppression of decomposition at high soil moisture
-        substrate_diffusion_exp: float
+        substrate_diffusion_exp : float
             controls suppression of decomp at low soil moisture
-        minMicrobeC: float
+        minMicrobeC : float
             minimum allowed microbe carbon as a fraction of unprotected carbon
-        Tmic: float
+        Tmic : float
             microbial turnover time (years)
-        et: float
+        et : float
             carbon efficiency of microbe turnover
-        eup: numpy.ndarray of shape (3,)
+        eup : numpy.ndarray of shape (3,)
             carbon use efficiency of microbial carbon uptake from each unprotected pool
-        tProtected: float
+        tProtected : float
             turnover time (years) of protected C
-        protection_rate: numpy.ndarray of shape (3,)
+        protection_rate : numpy.ndarray of shape (3,)
             protected C formation rate (1/year) for each unprotected pool
 
         Returns
         -------
         internal_flux_matrix: function
-            Parameters
-            ----------
-            C: numpy.ndarray with shape (7,)
+            __Parameters__
+            C : numpy.ndarray with shape (7,)
                 carbon stocks (gC/m2) at current time step
-            T: float
+            T : float
                 temperature (Kelvin) at current time step
-            W: float
+            W : float
                 soil water content (m3/m3) at current time step
-            Returns
-            -------
-            A: numpy.ndarray of shape (7,7)
-                internal flux matrix (gC/m2/year) at current time step
+            __Returns__
+            A : numpy.ndarray of shape (7,7)
+                internal carbon flux matrix (gC/m2/year) at current time step
         """
 
         cforc = self['constant_forcing']
@@ -239,12 +263,12 @@ class CORPSEData(ModelEvaluationData):
             slope = 0.4833
             intercept = 2.3282
 
-        if False: # from bsulman/CORPSE-fire-response/CORPSE_array.py
+        if False: # from CORPSE_array.py in CORPSE-fire-response
             claypercent = cforc['clay'] # percent
             BD = cforc['bd'] # g/cm3
             claymod = 10**(slope*np.log10(claypercent) + intercept) * BD * 1e-6
 
-        else: # from bsulman/CORPSE-N/code/CORPSE_integrate.py
+        else: # from code/CORPSE_integrate.py in CORPSE-N
             claypercent_reference = 20
             claypercent = cforc['clay'] # percent
             Qref = 10**(slope * np.log10(claypercent_reference) + intercept)
@@ -304,16 +328,14 @@ class CORPSEData(ModelEvaluationData):
         Returns
         -------
         influx_vector: function
-            Parameters
-            ----------
-            NPP_ag: float
+            __Parameters__
+            NPP_ag : float
                 above-ground carbon inputs (gC/m2/year) at current time step
-            NPP_bg: float
+            NPP_bg : float
                 below-ground carbon inputs (gC/m2/year) at current time step
-            Returns
-            -------
-            I: numpy.ndarray of shape (7,)
-                inlfux vector (gC/m2/year) at current time step
+            __Returns__
+            I : numpy.ndarray of shape (7,)
+                carbon influx vector (gC/m2/year) at current time step
         """
 
         # Values from Table 2 in supplement of Sulman et al. (2014)

@@ -1,3 +1,23 @@
+"""
+Data from SoilGrids database.
+
+Citation:
+    Poggio, L., et al. (2021). "SoilGrids 2.0: producing soil information
+    for the globe with quantified spatial uncertainty". SOIL, 7, 217–240.
+    https://doi.org/10.5194/soil-7-217-2021
+
+SoilGrids python interface:
+    Gan, T. (2023). "CSDMS SoilGrids Data Component (v0.1.4)". Zenodo.
+    https://doi.org/10.5281/zenodo.10368883
+
+
+Copyright (C) 2024  Alexander S. Brunmayr  <asb219@ic.ac.uk>
+
+This file is part of the ``evaluate_SOC_models`` python package, subject to
+the GNU General Public License v3 (GPLv3). You should have received a copy
+of GPLv3 along with this file. If not, see <https://www.gnu.org/licenses/>.
+"""
+
 import numpy as np
 import pandas as pd
 from soilgrids import SoilGrids

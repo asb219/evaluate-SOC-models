@@ -1,5 +1,31 @@
 #!/usr/bin/env Rscript
 
+# Run SOMic (Woolf & Lehmann, 2019) and write model output to CSV file.
+# This file is modified from "demo/SOMIC.r" (Woolf & Brunmayr, 2023), itself
+# modified from "demo/SOMIC.r" (Woolf, 2024).
+#
+# * Modified source code of SOMic:
+#     Woolf, D., & Brunmayr, A. S. (2023). "SOMic – GitHub fork asb219/somic1
+#     (v1.1-asb219)". Zenodo. https://doi.org/10.5281/zenodo.11068749
+#
+# * Original source code of SOMic:
+#     Woolf, D. (2024). "domwoolf/somic1: SOMic v 1.00 (v1.00)". Zenodo.
+#     https://doi.org/10.5281/zenodo.10578048
+#
+# * Associated manuscript:
+#     Woolf, D., & Lehmann, J. (2019). "Microbial models with minimal mineral
+#     protection can explain long-term soil organic carbon persistence".
+#     Scientific Reports, 9(1), 6522. https://doi.org/10.1038/s41598-019-43026-8
+#
+#
+# Original work Copyright (C) 2023  D. Woolf & A. S. Brunmayr  (GPLv3 license)
+#
+# Modified work Copyright (C) 2024  Alexander S. Brunmayr  <asb219@ic.ac.uk>
+#
+# This file is part of the ``evaluate_SOC_models`` python package, subject to
+# the GNU General Public License v3 (GPLv3). You should have received a copy
+# of GPLv3 along with this file. If not, see <https://www.gnu.org/licenses/>.
+
 cmdline_args <- commandArgs(trailingOnly=TRUE)
 
 all_data_csvfile_path <- cmdline_args[1]

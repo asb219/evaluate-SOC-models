@@ -1,3 +1,20 @@
+"""
+Data from the International Soil Radiocarbon Database (ISRaD).
+
+Citation:
+    Lawrence, C. R., et al. (2020). "An open-source database for
+    the synthesis of soil radiocarbon data: International Soil Radiocarbon
+    Database (ISRaD) version 1.0". Earth System Science Data, 12, 61–76.
+    https://doi.org/10.5194/essd-12-61-2020
+
+
+Copyright (C) 2024  Alexander S. Brunmayr  <asb219@ic.ac.uk>
+
+This file is part of the ``evaluate_SOC_models`` python package, subject to
+the GNU General Public License v3 (GPLv3). You should have received a copy
+of GPLv3 along with this file. If not, see <https://www.gnu.org/licenses/>.
+"""
+
 import warnings
 import re
 import numpy as np

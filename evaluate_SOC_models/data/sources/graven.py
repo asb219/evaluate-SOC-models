@@ -1,3 +1,19 @@
+"""
+Atmospheric 14CO2 data from Graven et al. (2017).
+
+Citation:
+    Graven, H., et al. (2017). "Compiled records of carbon isotopes in
+    atmospheric CO2 for historical simulations in CMIP6". Geoscientific Model
+    Development, 10, 4405–4417. https://doi.org/10.5194/gmd-10-4405-2017
+
+
+Copyright (C) 2024  Alexander S. Brunmayr  <asb219@ic.ac.uk>
+
+This file is part of the ``evaluate_SOC_models`` python package, subject to
+the GNU General Public License v3 (GPLv3). You should have received a copy
+of GPLv3 along with this file. If not, see <https://www.gnu.org/licenses/>.
+"""
+
 import pandas as pd
 
 from data_manager import \

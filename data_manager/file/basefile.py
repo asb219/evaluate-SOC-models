@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Alexander S. Brunmayr. Subject to the MIT license.
+
 """
 Basic file types
 """

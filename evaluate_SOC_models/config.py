@@ -1,3 +1,13 @@
+"""
+Get and set configurations in config files of ``evaluate_SOC_data`` package.
+
+Copyright (C) 2024  Alexander S. Brunmayr  <asb219@ic.ac.uk>
+
+This file is part of the ``evaluate_SOC_models`` python package, subject to
+the GNU General Public License v3 (GPLv3). You should have received a copy
+of GPLv3 along with this file. If not, see <https://www.gnu.org/licenses/>.
+"""
+
 from pathlib import Path
 from configparser import ConfigParser
 from loguru import logger
