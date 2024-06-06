@@ -141,17 +141,14 @@ class CESM2LEOutputData(Data):
         'Nlit', 'Clit', 'delta13Clit', 'Delta14Clit',
         'Cveg', 'delta13Cveg', 'Delta14Cveg',
         'Csoil', 'Delta14Csoil',
-        'C_fineroot_to_litter', 'C_leaf_to_litter',
-        'C_litterfall', 'C_HR_litter'
+        'C_litterfall', 'C_litterHR'
     ]
 
     _variables = [
         'GPP', 'NPP', 'BGNPP', 'AGNPP', 'TSOI', 'H2OSOI',
         'TOTLITN', 'TOTLITC', 'C13_TOTLITC', 'C14_TOTLITC',
         'TOTVEGC', 'C13_TOTVEGC', 'C14_TOTVEGC',
-        #'TOTSOMC', 'C13_TOTSOMC', 'C14_TOTSOMC'
         'SOILC_vr', 'C14_SOILC_vr',
-        'FROOTC_TO_LITTER', 'LEAFC_TO_LITTER',
         'LITFALL', 'LITTERC_HR'
     ]
 
@@ -304,25 +301,13 @@ class CESM2LEOutputData(Data):
         return Delta14Csoil
 
 
-    def _process_C_fineroot_to_litter(self):
-        C_fineroot_to_litter = self._read_data('FROOTC_TO_LITTER')
-        C_fineroot_to_litter.name = 'fineroot-to-litter C flux (gC/m2/s)'
-        return C_fineroot_to_litter
-
-
-    def _process_C_leaf_to_litter(self):
-        C_leaf_to_litter = self._read_data('LEAFC_TO_LITTER')
-        C_leaf_to_litter.name = 'leaf-to-litter C flux (gC/m2/s)'
-        return C_leaf_to_litter
-
-
     def _process_C_litterfall(self):
         C_litterfall = self._read_data('LITFALL')
         C_litterfall.name = 'litterfall C flux (gC/m2/s)'
         return C_litterfall
 
 
-    def _process_C_HR_litter(self):
+    def _process_C_litterHR(self):
         C_HR_litter = self._read_data('LITTERC_HR')
         C_HR_litter.name = 'litter heterotrophic respiration C flux (gC/m2/s)'
         return C_HR_litter

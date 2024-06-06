@@ -34,9 +34,7 @@ import f90nml
 from loguru import logger
 
 from data_manager import Data, DataFile, PandasCSVFile
-
 from evaluate_SOC_models.path import SAVEOUTPUTPATH, MENDREPOSITORYPATH
-
 from .base import ModelEvaluationData
 
 
@@ -96,7 +94,7 @@ class SoilIniDatFile(PandasCSVFile):
         with self.path.open('r') as f:
             header = [f.readline().strip() for line in range(2)]
         df = super()._read(sep='\s+', skiprows=[0,1])
-        df.columns = [c.strip() for c in df.columns] # because 'Value' is '\xa0Value'
+        df.columns = [c.strip() for c in df.columns] # '\xa0Value' -> 'Value'
         series = df.set_index('Property')['Value']
         return series, header
 
@@ -150,7 +148,7 @@ class MENDData(ModelEvaluationData):
         'LF': ['POM1','POM2'], # 'DOM', 'MBA', 'MBD'
         'HF': ['MOM','QOM'],
         'bulk': ['POM1', 'POM2', 'MOM', 'QOM', 'DOM', 'MBA', 'MBD']
-            # 'EP1', 'EP2', 'EM', *[f'ENZNm{i}' for i in range(1,7)]
+            # + ['EP1', 'EP2', 'EM', *[f'ENZNm{i}' for i in range(1,7)]]
     }
 
     _raw_output_stocks = {
@@ -203,8 +201,8 @@ class MENDData(ModelEvaluationData):
             spinup_C=400, spinup_F=1000, auto_remove_iofiles=True,
             *, save_pkl=True, save_csv=False, save_xlsx=False, **kwargs):
 
-        super().__init__(entry_name, site_name, pro_name,
-            save_pkl=save_pkl, save_csv=save_csv, save_xlsx=save_xlsx, **kwargs)
+        super().__init__(entry_name, site_name, pro_name, save_pkl=save_pkl,
+            save_csv=save_csv, save_xlsx=save_xlsx, **kwargs)
 
         self.spinup_C = int(spinup_C)
         self.spinup_F = int(spinup_F)
@@ -259,16 +257,17 @@ class MENDData(ModelEvaluationData):
             ['Tsoil', 'Wsoil', 'GPP_total', 'Delta14Clit', 'NHx', 'NOy']
         ].copy().rename(columns={'GPP_total': 'GPP'})
         forc['Tsoil'] -= 273 # Kelvin -> degrees Celsius
-        forc['GPP'] *= 1e3 / 1e4 * (60*60) # gC/m2/s -> mgC/cm2/hour
-        forc['NHx'] *= 100 * 1e3 / 1e4 / (365/12*24) # gN/m2/month -> mgN/cm2/hour
-        forc['NOy'] *= 100 * 1e3 / 1e4 / (365/12*24) # gN/m2/month -> mgN/cm2/hour
+        forc['GPP'] *= 1e3 / 1e4 * (60*60) # gC/m2/s -> mgC/cm2/h
+        forc['NHx'] *= 100 * 1e3 / 1e4 / (365/12*24) # gN/m2/month -> mgN/cm2/h
+        forc['NOy'] *= 100 * 1e3 / 1e4 / (365/12*24) # gN/m2/month -> mgN/cm2/h
         return forc
 
 
     def _process_spinup_C_forcing(self):
-        start_year = 1000
-        end_year = start_year + self.spinup_C
-        index = pd.date_range(str(start_year), str(end_year), freq='M', unit='s')
+        start_year = '1000'
+        end_year = str(int(start_year) + self.spinup_C)
+        index = pd.date_range(str(start_year), str(end_year), freq='ME',
+        unit='s')
         forc_year = self['preindustrial_forcing']
         forc = pd.concat([forc_year] * self.spinup_C, ignore_index=True)
         forc.index = index
@@ -276,7 +275,7 @@ class MENDData(ModelEvaluationData):
 
 
     def _process_spinup_F_forcing(self):
-        index = pd.date_range('1000', '1001', freq='M', unit='s')
+        index = pd.date_range('1000', '1001', freq='ME', unit='s')
         forc_year = self['preindustrial_forcing']
         forc_year.index = index
         return forc_year
@@ -357,8 +356,8 @@ class MENDData(ModelEvaluationData):
         TC_all = self._get_TC_all(FLX_hour)
         I_all = self._get_I_all(FLX_hour)
         IFin_all = I_all
-        ordered_stock_names = [self._raw_output_stocks[p] for p in self.all_pools]
-        C0 = VAR_hour[ordered_stock_names].iloc[0].values
+        ordered_names = [self._raw_output_stocks[p] for p in self.all_pools]
+        C0 = VAR_hour[ordered_names].iloc[0].values
         F0 = np.zeros_like(C0) + 0.95
         Ncycles = self.spinup_F
         F = self._integrate_spinup_F(TC_all, I_all, IFin_all, C0, F0, Ncycles)
@@ -408,8 +407,8 @@ class MENDData(ModelEvaluationData):
         TC_all = self._get_TC_all(FLX_hour)
         I_all = self._get_I_all(FLX_hour)
 
-        ordered_stock_names = [self._raw_output_stocks[p] for p in self.all_pools]
-        C0 = VAR_hour[ordered_stock_names].iloc[0].values
+        ordered_names = [self._raw_output_stocks[p] for p in self.all_pools]
+        C0 = VAR_hour[ordered_names].iloc[0].values
         F0 = initial_F.values
 
         flux_times = FLX_hour.index
@@ -419,7 +418,7 @@ class MENDData(ModelEvaluationData):
         Fin = Delta14Cin / 1000 + 1
         IFin_all = I_all * Fin
 
-        C_all = VAR_hour[ordered_stock_names].values
+        C_all = VAR_hour[ordered_names].values
         F_all = self._integrate_realrun_F(TC_all, I_all, IFin_all, C_all, F0)
 
         cpools = self.all_pools
@@ -469,7 +468,8 @@ class MENDData(ModelEvaluationData):
         decay_14C = np.log(2)/5730 / 365 / 24 # 1/hour
         F_all = np.empty_like(C_all)
         F = F_all[0] = F0
-        for i, (TC, I, IFin, C) in enumerate(zip(TC_all, I_all, IFin_all, C_all[:-1])):
+        for i, (TC, I, IFin, C) in enumerate(
+                zip(TC_all, I_all, IFin_all, C_all[:-1])):
             FC = F * C
             FC = FC + TC.dot(F) + IFin - decay_14C * FC
             C = C + TC.sum(axis=1) + I
@@ -631,9 +631,10 @@ class MENDData(ModelEvaluationData):
         max_Wsoil_1850_2014 = self['realrun_forcing']['Wsoil'].max() * 1.01
         config['vg_SWCsat'] = max(config['vg_SWCsat'], max_Wsoil_1850_2014)
 
-        # Litter input
-        avg_GPP_1850_2014 = self['realrun_forcing']['GPP'].mean() * 24 # mgC/cm2/h -> mgC/cm2/d
-        config['GPPref'] = avg_GPP_1850_2014 # "Average GPP or litter input", must be in mgC/cm2/d
+        # Carbon input
+        avg_GPP_1850_2014 = self['realrun_forcing']['GPP'].mean()
+        avg_GPP_1850_2014 *= 24 # mgC/cm2/h -> mgC/cm2/d (must be these units)
+        config['GPPref'] = avg_GPP_1850_2014 # "Average GPP or litter input"
         config['ifdata_type1'] = 1
         config['sUnits_type1'] = 'mgC-cm2-h' # must be 'mgC-cm2-h'
         config['step_type1'] = 'monthly'

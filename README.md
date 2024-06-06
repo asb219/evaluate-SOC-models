@@ -69,12 +69,10 @@ _Earth System Science Data, 12_(1), 61–76. DOI: [10.5194/essd-12-61-2020](http
 
 * `evaluate_SOC_models`: contains code to run the models and produce the results
 * `produce_all_results.py`: run all models and produce plots and tables with the results
-* `data_manager`: for easier data management, file read/write, file downloads
+* `data-manager`: for easier data management, file read/write, file downloads
 * `dump`: default directory for file storage
 * `MEND`: git submodule of [my fork](https://github.com/asb219/MEND) of MEND's
     original repository [wanggangsheng/MEND](https://github.com/wanggangsheng/MEND)
-* `config.py`: manage configurations
-* `config_defaults.ini`: default config file
 * `environment.yml`: required python and R packages
 * `setup.py`: for pip installation of "evaluate-SOC-models"
 
@@ -184,14 +182,14 @@ Make sure you have enough RAM and disk space to run MEND in parallel!
 
 ## Customize configurations _(optional)_
 
-For a list of configuration options, check
+For a list of configuration options, run
 
 ```
-python -m config --help
+config --help
 ```
 
 Changing any of the configurations will create a custom configuration file, `config.ini`,
-which takes precedence over `config_defaults.ini`.
+which takes precedence over `config_defaults.ini` in the `evaluate_SOC_models` directory.
 
 
 ### File storage location
@@ -204,13 +202,13 @@ All those files are (permanently or temporarily) stored in the `dump` directory 
 You can check the absolute path of the file storage location with
 
 ```
-python -m config -get-dump
+config -get-dump
 ```
 
 If you would like to store the files in a different location, run the following command:
 
 ```
-python -m config -set-dump "/your/new/path/to/dump"
+config -set-dump "/your/new/path/to/dump"
 ```
 
 

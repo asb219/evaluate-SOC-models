@@ -64,7 +64,7 @@ if __name__ == '__main__': # if-condition necessary when multiprocessing
     ######################
 
     parser = argparse.ArgumentParser(
-        prog='produce_all_results',
+        prog='python -m produce_all_results',
         description='Evaluate all models, produce all result tables and plots',
         epilog=''
     )
@@ -198,7 +198,6 @@ if __name__ == '__main__': # if-condition necessary when multiprocessing
         show=False, save=path/'sampling_year_vs_temperature.pdf'
     )
 
-
     path = PLOTPATH/'predicted_vs_observed'
     for model in MODELS:
         plot_predicted_vs_observed(
@@ -251,11 +250,11 @@ if __name__ == '__main__': # if-condition necessary when multiprocessing
     plt.axhline(y=0, c='k', alpha=0.7, zorder=-10, lw=0.8)
     plt.plot(atmosphere, lw=3, c='k', label='atmospheric CO$_2$', zorder=0)
     plt.plot(somic_good['bulk_14c'], c='C0', label='bulk SOC', zorder=5, lw=2)
-    plt.plot(somic_bad['bulk_14c'], c='C0', label='bulk SOC (inaccurate)',zorder=6, lw=2, alpha=0.5)
+    plt.plot(somic_bad['bulk_14c'], c='C0', label='bulk SOC (inaccurate)', zorder=6, lw=2, alpha=0.5)
     plt.plot(somic_good['LF_14c'], c='C2', label='POM', zorder=3, lw=2)
-    plt.plot(somic_bad['LF_14c'], c='C2', label='POM (inaccurate)',zorder=4, lw=2, alpha=0.5)
+    plt.plot(somic_bad['LF_14c'], c='C2', label='POM (inaccurate)', zorder=4, lw=2, alpha=0.5)
     plt.plot(somic_good['HF_14c'], c='C1', label='MAOM', zorder=1, lw=2)
-    plt.plot(somic_bad['HF_14c'], c='C1', label='MAOM (inaccurate)',zorder=2, lw=2, alpha=0.5)
+    plt.plot(somic_bad['HF_14c'], c='C1', label='MAOM (inaccurate)', zorder=2, lw=2, alpha=0.5)
     plt.xlim((pd.to_datetime('1950'), pd.to_datetime('2020')))
     plt.xlabel('year', size=12)
     plt.ylabel('$\Delta^{14}$C (‰)', size=12)

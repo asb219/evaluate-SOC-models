@@ -13,12 +13,14 @@ from evaluate_SOC_models.config import get_config
 
 config = get_config()
 
-REPOSITORYPATH = Path(__file__).resolve().parent.parent # git repository path
+PACKAGEPATH = Path(__file__).resolve().parent
+
+def absolute_path(x):
+    return ( PACKAGEPATH / Path(config['path'][x]).expanduser() ).resolve()
+
+REPOSITORYPATH = absolute_path('repository')
 MENDREPOSITORYPATH = REPOSITORYPATH / 'MEND'
 MIMICS2021REPOSITORYPATH = REPOSITORYPATH / 'MIMICS2021'
-
-absolute_path = lambda x: REPOSITORYPATH / Path(config['path'][x]).expanduser()
-
 DUMPPATH = absolute_path('dump')
 DOWNLOADPATH = absolute_path('downloads')
 DATAPATH = absolute_path('data')

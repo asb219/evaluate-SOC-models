@@ -72,7 +72,7 @@ def _remove_default_handler():
     try:
         logger.remove(0)
     except ValueError:
-        pass # had already been removed before
+        pass # already removed before
 
 
 def enable_console_logging():
@@ -115,6 +115,8 @@ def enable_logfile_logging():
         logger.info('logfile logging already enabled')
         return
 
+    config = get_config()
+
     logfile_handler_id = logger.add(
         str(LOGFILEPATH),
         level='DEBUG', # 'TRACE'
@@ -122,15 +124,15 @@ def enable_logfile_logging():
         opener=lambda file, flags: os.open(file, flags, 0o600),
         backtrace=True, # for when logger.exception is used
         enqueue=True, # for compatibility with multiprocessing
-        rotation="500 KB",
-        retention="30 days"
+        rotation=config['log']['logfile_rotation'],
+        retention=config['log']['logfile_retention']
     )
     logger.success('logfile logging enabled')
 
 
 def disable_logfile_logging():
-    logger.debug('disabling logfile logging ...')
     global logfile_handler_id
+    logger.debug('disabling logfile logging ...')
     if logfile_handler_id is None:
         logger.info('logfile logging already disabled')
     else:

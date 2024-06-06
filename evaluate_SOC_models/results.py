@@ -49,7 +49,7 @@ MEND_fails = {
     #('McFarlane_2013', 'MI-Coarse UMBS', 'G3'), # works now!
     ('McFarlane_2013', 'MI-Coarse UMBS', 'O2'), # new
     ('Schrumpf_2013', 'Hesse', 'Hesse.1'), # still doesn't work
-    #('Schrumpf_2013' 'Laqueuille' 'Laqueuille.1') # works now!
+    #('Schrumpf_2013', 'Laqueuille', 'Laqueuille.1') # works now!
 }
 MEND_runs_at_first_but_then_fails = {
     ('Lemke_2006', 'Solling', 'Solling_DO_F1'), # still doesn't work
@@ -76,28 +76,38 @@ MEND_bad_14C_initial_condition_but_still_runs_nicely_for_the_remaining_time = {
 MEND_excluded_profiles = MEND_fails | MEND_runs_at_first_but_then_fails
 
 
-def run_model(model, profile):
+def run_model(model, profile, *, save_pkl=True, force_rerun=False):
     """
     Parameters
     ----------
-    model : :py:class:`evaluate_SOC_models.ModelEvaluationData` subclass
-        class of model to run
+    model : evaluate_SOC_models.ModelEvaluationData subclass
+        class of model to run on profile
     profile : tuple(str, str, str)
         3-tuple of ISRaD profile index (entry_name, site_name, pro_name)
+    save_pkl : bool, default True
+        pickle model input/output so no need to re-run next time
+    force_rerun : bool, default False
+        if True, delete all model input/output files and re-run model;
+        if False, do not re-run if pickled model output already exists
     
     Returns
     -------
-    m : :py:class:`evaluate_SOC_models.ModelEvaluationData` instance
-        model 
+    m : evaluate_SOC_models.ModelEvaluationData instance
+        instance of `model` at `profile`
     success : bool
-        whether model was run successfully
+        whether model run was successful
     """
 
     entry_name, site_name, pro_name = profile
 
-    m = model(entry_name, site_name, pro_name, save_pkl=True)
+    m = model(entry_name, site_name, pro_name, save_pkl=save_pkl)
 
-    if m._file_groups['pickle'].all_exist():
+    if force_rerun:
+        m.purge_savedir(ask=False)
+
+    required_datasets = ['output', 'predicted', 'observed', 'error']
+
+    if all(f.exists() for f in m._file_groups['pickle'][required_datasets]):
         success = True
 
     elif m.forcing.isnull().values.sum():
@@ -111,7 +121,10 @@ def run_model(model, profile):
     else:
         logger.info(f'Running {m}.')
         try:
-            m['error']
+            #m['error']
+            for ds in required_datasets:
+                if not m._file_groups['pickle'][ds].exists():
+                    m.get(ds)
         except Exception as e:
             logger.exception(e)
             logger.error(f'Failed to run {m}.')
@@ -124,16 +137,23 @@ def run_model(model, profile):
 
 
 def _run_model_for_multiprocessing(args):
-    run_model(*args)
+    model, profile, kwargs = args
+    run_model(model, profile, **kwargs)
 
 
-def run_all_models_all_profiles(njobs, models=None, profiles=None):
+def run_all_models_all_profiles(njobs, models=None, profiles=None, **kwargs):
     """Run all models for all profiles on `njobs` CPU cores."""
 
     if models is None:
         models = get_all_models()
     if profiles is None:
         profiles = get_all_profiles()
+
+    if njobs == 1: # run on 1 core
+        for model in models:
+            for profile in profiles:
+                run_model(model, profile)
+        return
 
     # Make sure all local forcing data are ready
     for profile in profiles:
@@ -142,15 +162,10 @@ def run_all_models_all_profiles(njobs, models=None, profiles=None):
             if not forc._file_groups['pickle'][dataset].exists():
                 forc[dataset]
 
-    if njobs == 1: # run on 1 core
-        for model in models:
-            for profile in profiles:
-                run_model(model, profile)
-
-    else: # run on multiple cores
-        list_of_args = [(m, p) for p in profiles for m in models]
-        with multiprocessing.Pool(njobs) as pool:
-            pool.map(_run_model_for_multiprocessing, list_of_args)
+    # Run models in parallel on `njobs` cores
+    list_of_args = [(m, p, kwargs) for p in profiles for m in models]
+    with multiprocessing.Pool(njobs) as pool:
+        pool.map(_run_model_for_multiprocessing, list_of_args)
 
 
 

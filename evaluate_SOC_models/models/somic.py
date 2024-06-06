@@ -54,26 +54,29 @@ class SOMicData(ModelEvaluationData):
         #'soc' # total soil organic carbon (sum of all pools)
     ]
     fraction_to_pool_dict = {
-        'LF': ['spm', 'ipm'], # 'mb', 'doc'
-        'HF': ['mac'], # 'mb'
-        'bulk': ['soc']
+        'LF': ['spm', 'ipm'],
+        'HF': ['mac'],
+        'bulk': ['soc'] # equivalent to ['spm', 'ipm', 'mac', 'mb', 'doc']
     }
 
-    def __init__(self, entry_name, site_name, pro_name, spinup=5000, # years
+    def __init__(self, entry_name, site_name, pro_name, spinup=50000, # years
             auto_remove_csv=True, use_fraction_modern=True,
             *, save_pkl=True, save_csv=False, save_xlsx=False, **kwargs):
 
-        super().__init__(entry_name, site_name, pro_name,
-            save_pkl=save_pkl, save_csv=save_csv, save_xlsx=save_xlsx, **kwargs)
+        super().__init__(entry_name, site_name, pro_name, save_pkl=save_pkl,
+            save_csv=save_csv, save_xlsx=save_xlsx, **kwargs)
 
         self.spinup = spinup
         self._auto_remove_csv = auto_remove_csv
         self.use_fraction_modern = use_fraction_modern # instead of 14C-age
 
         self.R_interface_files = {
-            'all_data_spinup': PandasCSVFile(self.savedir/'all_data_spinup.csv'),
-            'exp_const_spinup': PandasCSVFile(self.savedir/'exp_const_spinup.csv'),
-            'output_spinup': PandasCSVFile(self.savedir/'output_spinup.csv', readonly=True),
+            'all_data_spinup':
+                PandasCSVFile(self.savedir/'all_data_spinup.csv'),
+            'exp_const_spinup':
+                PandasCSVFile(self.savedir/'exp_const_spinup.csv'),
+            'output_spinup':
+                PandasCSVFile(self.savedir/'output_spinup.csv', readonly=True),
             'all_data': PandasCSVFile(self.savedir/'all_data.csv'),
             'exp_const': PandasCSVFile(self.savedir/'exp_const.csv'),
             'output': PandasCSVFile(self.savedir/'output.csv', readonly=True)
@@ -82,7 +85,7 @@ class SOMicData(ModelEvaluationData):
 
     def _process_forcing(self):
         forc = self._forcing['dynamic'][
-            ['Tsoil', 'Wsoil', 'NPP', 'Delta14Clit']
+            ['Tsoil', 'Wsoil', 'litinput', 'Delta14Clit']
         ].copy() # data is already monthly
         forc['Tsoil'] -= 273.15 # convert Kelvin to degrees Celsius
         return forc
@@ -156,9 +159,9 @@ class SOMicData(ModelEvaluationData):
         all_data = self._build_all_data_template(is_spinup=False)
 
         # Set initial condition for carbon stocks and d13C of carbon pools
-        idx0 = all_data.index[0]
+        i0 = all_data.index[0]
         columns = ['spm', 'ipm', 'doc', 'mb', 'mac', 'soc', 'soc.d13c']
-        all_data.loc[idx0, columns] = self['raw_output_spinup'][columns].iloc[-1]
+        all_data.loc[i0, columns] = self['raw_output_spinup'][columns].iloc[-1]
 
         return all_data
 
@@ -221,14 +224,13 @@ class SOMicData(ModelEvaluationData):
             spm_ipm_ratio = 0.67
         elif land_cover == 'cultivated':
             spm_ipm_ratio = 1.44
-        else:
-            # pro_land_cover is 'bare' or other
+        else: # pro_land_cover is 'bare' or other
             raise ValueError(f"Can't handle land cover '{land_cover}'.")
 
-        # Add input data, converting gC/m2/s to MgC/ha/month
-        NPP = dforc['NPP'] * 1e-6 * 100**2 * (30*24*60*60)
-        all_data['added.ipm'] = NPP / (1 + spm_ipm_ratio)
-        all_data['added.spm'] = NPP * spm_ipm_ratio / (1 + spm_ipm_ratio)
+        # Add litter input data, converting gC/m2/s to MgC/ha/month
+        litinput = dforc['litinput'] * 1e-6 * 100**2 * (30*24*60*60)
+        all_data['added.ipm'] = litinput / (1 + spm_ipm_ratio)
+        all_data['added.spm'] = litinput * spm_ipm_ratio / (1 + spm_ipm_ratio)
         all_data['added.mb'] = 0.
         all_data['added.mac'] = 0.
         all_data['added.doc'] = 0.
@@ -278,8 +280,8 @@ class SOMicData(ModelEvaluationData):
         exp_const_file = self.R_interface_files['exp_const' + postfix]
         output_file = self.R_interface_files['output' + postfix]
 
-        all_data_file.write(self['all_data' + postfix], index=False)#, float_format='%.4e')
-        exp_const_file.write(self['exp_const' + postfix], index=False)#, float_format='%.1f')
+        all_data_file.write(self['all_data' + postfix], index=False)
+        exp_const_file.write(self['exp_const' + postfix], index=False)
 
         self._run_R(all_data_file.path, exp_const_file.path, output_file.path)
 

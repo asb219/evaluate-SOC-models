@@ -128,7 +128,7 @@ class ForcingData(Data):
             'Delta14Clit': cesm2le['Delta14Clit'], # permille, D14C of litter
             'NHx': isimip2['NHx'], # gN/m2/month, NHx deposition
             'NOy': isimip2['NOy'], # gN/m2/month, NOy deposition
-            'CNlit': cesm2le['Clit'] / cesm2le['Nlit'] # gC/gN of litter
+            'CNlit': cesm2le['Clit'] / cesm2le['Nlit'], # gC/gN of litter
         }).loc['1850':'2014']
 
         # Fill monthly NHx and NOy deposition over 1850-1860 period
@@ -137,6 +137,14 @@ class ForcingData(Data):
         fill = forc.loc['1860':'1869', ['NHx','NOy']].groupby(month_num).mean()
         forc.loc['1850':'1859', 'NHx'] = np.tile(fill['NHx'].values, 10)
         forc.loc['1850':'1859', 'NOy'] = np.tile(fill['NOy'].values, 10)
+
+        # SOMic developer D. Woolf approximates C inputs into soils like this:
+        litinput = ( # total litterfall minus litter heterotrophic respiration
+            cesm2le['C_litterfall'] - cesm2le['C_litterHR']
+        ).resample('YS').mean() # take annual average
+        litinput[litinput < 0] = 0 # "fix" years where litterHR > litterfall
+        forc['litinput'] = litinput # gC/m2/s, total litter inputs into soil
+        forc['litinput'].ffill(inplace=True) # forward-fill monthly data
 
         return forc
 

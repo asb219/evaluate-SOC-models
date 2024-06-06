@@ -11,11 +11,11 @@ If you would like to store these files in a different location,
 activate the `eval14c` environment and run the following command:
 
 ```
-python -m config -set-dump "/your/new/path/to/dump"
+config -set-dump "/your/new/path/to/dump"
 ```
 
 You can check the absolute path of the current file storage location with
 
 ```
-python -m config -get-dump
+config -get-dump
 ```

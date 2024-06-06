@@ -63,11 +63,11 @@ class CORPSEData(ModelEvaluationData):
     }
 
     def __init__(self, entry_name, site_name, pro_name,
-            spinup=4000, spinup_from_steady_state=200, # years
+            spinup=10000, spinup_from_steady_state=200, # years
             *, save_pkl=True, save_csv=False, save_xlsx=False, **kwargs):
 
-        super().__init__(entry_name, site_name, pro_name,
-            save_pkl=save_pkl, save_csv=save_csv, save_xlsx=save_xlsx, **kwargs)
+        super().__init__(entry_name, site_name, pro_name, save_pkl=save_pkl,
+            save_csv=save_csv, save_xlsx=save_xlsx, **kwargs)
 
         self.spinup = spinup
         self.spinup_from_steady_state = spinup_from_steady_state
@@ -204,31 +204,36 @@ class CORPSEData(ModelEvaluationData):
             vmaxref, Ea, kC, gas_diffusion_exp, substrate_diffusion_exp,
             minMicrobeC, Tmic, et, eup, tProtected, protection_rate):
         """
-        Almost all variable names are like in CORPSE-fire-response
-        Arrays of shape (3,) are ordered like ['fast', 'slow', 'necro']
-        Arrays of shape (7,) are ordered like ['MB', 'Ufast', 'Uslow', 'Unecr',
-                                               'Pfast', 'Pslow', 'Pnecr']
+        Almost all variable names are like in CORPSE-fire-response.
+        Arrays of shape (3,) are ordered like ['fast', 'slow', 'necro'].
+        Arrays of shape (7,) are ordered like
+            ['MB', 'Ufast', 'Uslow', 'Unecr', 'Pfast', 'Pslow', 'Pnecr'].
 
         Parameters
         ----------
         vmaxref : numpy.ndarray of shape (3,)
-            max decomposition rate (1/year) at 20°C for each unprotected pool
+            max decomposition rate (1/year) at 20°C for each
+            unprotected pool
         Ea : numpy.ndarray of shape (3,)
-            activation energy (J/mol) for decomposition of each unprotected pool
+            activation energy (J/mol) for decomposition of each
+            unprotected pool
         kC : float
-            Michaelis-Menten half-saturation constant (g microbial biomass / g substrate)
+            Michaelis-Menten half-saturation constant
+            (g microbial biomass / g substrate)
         gas_diffusion_exp : float
             determines suppression of decomposition at high soil moisture
         substrate_diffusion_exp : float
             controls suppression of decomp at low soil moisture
         minMicrobeC : float
-            minimum allowed microbe carbon as a fraction of unprotected carbon
+            minimum allowed microbe carbon as a fraction of unprotected
+            carbon
         Tmic : float
             microbial turnover time (years)
         et : float
             carbon efficiency of microbe turnover
         eup : numpy.ndarray of shape (3,)
-            carbon use efficiency of microbial carbon uptake from each unprotected pool
+            carbon use efficiency of microbial carbon uptake from each
+            unprotected pool
         tProtected : float
             turnover time (years) of protected C
         protection_rate : numpy.ndarray of shape (3,)
@@ -246,7 +251,8 @@ class CORPSEData(ModelEvaluationData):
                 soil water content (m3/m3) at current time step
             __Returns__
             A : numpy.ndarray of shape (7,7)
-                internal carbon flux matrix (gC/m2/year) at current time step
+                internal carbon flux matrix (gC/m2/year) at current
+                time step
         """
 
         cforc = self['constant_forcing']

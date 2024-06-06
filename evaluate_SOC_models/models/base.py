@@ -51,7 +51,8 @@ class ModelEvaluationData(Data):
         model_name = self.model_name
 
         if savedir is None:
-            savedir = SAVEOUTPUTPATH / entry_name / site_name / pro_name / model_name
+            savedir = \
+                SAVEOUTPUTPATH / entry_name / site_name / pro_name / model_name
 
         if name is None:
             name = model_name.lower()
@@ -115,16 +116,6 @@ class ModelEvaluationData(Data):
         predicted[c_2000] = output[c].reindex(dates, method='nearest').values
 
         return predicted
-
-
-    # def _process_predicted_normalized_to_2000(self):
-    #     output = self['output'][self.predicted_columns].copy()
-    #     predicted = self['predicted']
-    #     c = ['bulk_14c', 'HF_14c', 'LF_14c']
-    #     c_2000 = ['bulk_14c_2000', 'HF_14c_2000', 'LF_14c_2000']
-    #     dates = [pd.to_datetime('2000-07-01')] * len(predicted)
-    #     predicted[c_2000] = output[c].reindex(dates, method='nearest').values
-    #     return predicted
 
 
     def _process_observed(self):

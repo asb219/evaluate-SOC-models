@@ -38,7 +38,6 @@ from data_manager import (
 from evaluate_SOC_models.path import MIMICS2021REPOSITORYPATH
 
 
-
 class JSONFile(DataFile):
 
     def _read(self, **kwargs):

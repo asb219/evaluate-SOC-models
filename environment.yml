@@ -16,11 +16,13 @@ dependencies:
     - tqdm # progress bar
     - loguru
     - py7zr # for 7z archives
+    - setuptools
     - pip
     - pip:
         - soilgrids
         - rioxarray # read geotiff files
         - f90nml # to edit fortran namelist files
+        - -e data-manager # editable installation of data-manager
         - -e . # editable installation of evaluate-SOC-models using setup.py
 
     # Dependencies of the SOMic model's R package:

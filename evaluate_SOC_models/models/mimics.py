@@ -451,11 +451,11 @@ class MIMICSData(ModelEvaluationData):
     }
 
     def __init__(self, entry_name, site_name, pro_name,
-            spinup=4000, spinup_from_steady_state=200, # years
+            spinup=10000, spinup_from_steady_state=200, # years
             *, save_pkl=True, save_csv=False, save_xlsx=False, **kwargs):
 
-        super().__init__(entry_name, site_name, pro_name,
-            save_pkl=save_pkl, save_csv=save_csv, save_xlsx=save_xlsx, **kwargs)
+        super().__init__(entry_name, site_name, pro_name, save_pkl=save_pkl,
+            save_csv=save_csv, save_xlsx=save_xlsx, **kwargs)
 
         self.spinup = spinup
         self.spinup_from_steady_state = spinup_from_steady_state
