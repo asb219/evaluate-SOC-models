@@ -344,7 +344,7 @@ class CESM2LEOutputData(Data):
 
         if variable in ('TSOI', 'H2OSOI', 'C14_SOILC_vr', 'SOILC_vr'):
             # Average over the top-bot soil depth interval
-            da = self._average_over_depth(da, variable, self.top, self.bot)
+            da = self._average_over_depth(da, self.top, self.bot)
 
         # Make a pandas.Series from the xarray.DataArray
         series = da.to_pandas()
