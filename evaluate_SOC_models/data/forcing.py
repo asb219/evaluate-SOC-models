@@ -139,12 +139,18 @@ class ForcingData(Data):
         forc.loc['1850':'1859', 'NOy'] = np.tile(fill['NOy'].values, 10)
 
         # SOMic developer D. Woolf approximates C inputs into soils like this:
-        litinput = ( # total litterfall minus litter heterotrophic respiration
+        litinput_total = ( # litterfall minus litter heterotrophic respiration
             cesm2le['C_litterfall'] - cesm2le['C_litterHR']
         ).resample('YS').mean() # take annual average
-        litinput[litinput < 0] = 0 # "fix" years where litterHR > litterfall
-        forc['litinput'] = litinput # gC/m2/s, total litter inputs into soil
-        forc['litinput'].ffill(inplace=True) # forward-fill monthly data
+        litinput_total[litinput_total < 0] = 0 # remove negative litter inputs
+        forc['litinput_total'] = litinput_total # gC/m2/s
+        forc['litinput_total'] = forc['litinput_total'].ffill() # forward-fill monthly data
+
+        # Select litter input in depth layer, assuming same distribution as NPP
+        fraction_litinput_in_layer = forc['NPP'].resample('YS').mean() \
+            / forc['NPP_total'].resample('YS').mean()
+        forc['litinput'] = litinput_total * fraction_litinput_in_layer # gC/m2/s
+        forc['litinput'] = forc['litinput'].ffill() # forward-fill monthly data
 
         return forc
 

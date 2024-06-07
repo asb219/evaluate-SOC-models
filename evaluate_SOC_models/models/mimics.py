@@ -469,7 +469,7 @@ class MIMICSData(ModelEvaluationData):
         forcing['NPP'] *= 365*24*60*60 # gC/m2/s -> gC/m2/year
         forcing['Fin'] = forcing['Delta14Clit'] / 1000 + 1
         forcing = forcing.drop(columns=['Delta14Clit'])
-        forcing = forcing.resample('H').ffill() # hourly time steps
+        forcing = forcing.resample('h').ffill() # hourly time steps
         return forcing
 
 

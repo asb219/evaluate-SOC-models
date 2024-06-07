@@ -151,7 +151,7 @@ if __name__ == '__main__': # if-condition necessary when multiprocessing
     )
 
     for normalized_to_2000, path in [
-        (True, PLOTPATH/'environment_plots'/'normalized_to_2000'),
+        (True, PLOTPATH/'environment_plots'/'normalized_to_year_2000'),
         (False, PLOTPATH/'environment_plots'/'without_normalization')
     ]:
         for plot_type in ['predicted', 'error', 'absolute_error']:
