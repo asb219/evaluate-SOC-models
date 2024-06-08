@@ -42,28 +42,28 @@ def get_all_profiles():
 
 
 MEND_fails = {
-    ('Heckman_2018', 'HI_Andisol', 'WPL1204'), # still doesn't work # still
-    #('McFarlane_2013', 'MA Harvard Forest', 'H4'), # works now, but not with 14C
-    #('McFarlane_2013', 'MI-Coarse UMBS', 'C7'), # works now, but not with 14C
-    #('McFarlane_2013', 'MI-Coarse UMBS', 'D4'), # works now, but not with 14C
-    #('Schrumpf_2013', 'Laqueuille', 'Laqueuille.1') # works now, but bad 14C initial condition
-}
-MEND_runs_at_first_but_then_fails = {
+    ('Heckman_2018', 'HI_Andisol', 'WPL1204'),
     ('Lemke_2006', 'Solling', 'Solling_DO_F1'),
     ('Lemke_2006', 'Solling', 'Solling_DO_F2'),
     ('Lemke_2006', 'Solling', 'Solling_DO_F3'),
-    ('McFarlane_2013', 'MI-Coarse UMBS', '60M'),
-    ('McFarlane_2013', 'MI-Coarse UMBS', 'G3'),
+    #('McFarlane_2013', 'MA Harvard Forest', 'H4'), # works now, but 14C fails
+    #('McFarlane_2013', 'MI-Coarse UMBS', '60M'), # works on my pc
+    #('McFarlane_2013', 'MI-Coarse UMBS', 'C7'), # works now, but 14C fails
+    #('McFarlane_2013', 'MI-Coarse UMBS', 'D4'), # works now, but 14C fails
+    #('McFarlane_2013', 'MI-Coarse UMBS', 'G3'), # works on my pc
     ('McFarlane_2013', 'MI-Coarse UMBS', 'O2'),
+    ('Schrumpf_2013', 'Hesse', 'Hesse.1'),
+    #('Schrumpf_2013', 'Laqueuille', 'Laqueuille.1') # works now
+}
+MEND_runs_but_output_is_problematic = {
     ('Rasmussen_2018', 'GRpp', 'GRpp'), # negative SOC stocks
     ('Rasmussen_2018', 'GRwf', 'GRwf'), # negative SOC stocks
-    ('Schrumpf_2013', 'Hesse', 'Hesse.1'),
     ('Schrumpf_2013', 'Norunda', 'Norunda.1') # bad C repartition
 }
 MEND_C_works_but_14C_fails = {
-    ('McFarlane_2013', 'MA Harvard Forest', 'H4'), # transferred from MEND_fails
-    ('McFarlane_2013', 'MI-Coarse UMBS', 'C7'), # transferred from MEND_fails
-    ('McFarlane_2013', 'MI-Coarse UMBS', 'D4'), # transferred from MEND_fails
+    ('McFarlane_2013', 'MA Harvard Forest', 'H4'), # promoted from MEND_fails
+    ('McFarlane_2013', 'MI-Coarse UMBS', 'C7'), # promoted from MEND_fails
+    ('McFarlane_2013', 'MI-Coarse UMBS', 'D4'), # promoted from MEND_fails
     ('McFarlane_2013', 'Mi-Fine Colonial Point', 'C1'),
     ('McFarlane_2013', 'Mi-Fine Colonial Point', 'C4'),
     ('McFarlane_2013', 'Mi-Fine Colonial Point', 'C5')
@@ -75,9 +75,9 @@ MEND_bad_14C_initial_condition_but_still_runs_nicely_for_the_remaining_time = {
     ('McFarlane_2013', 'NH Bartlett Forest', 'B3'),
     ('McFarlane_2013', 'NH Bartlett Forest', 'B4'),
     #('McFarlane_2013', 'NH Bartlett Forest', 'B5'), # good now
-    ('Schrumpf_2013', 'Laqueuille', 'Laqueuille.1')
+    ('Schrumpf_2013', 'Laqueuille', 'Laqueuille.1') # promoted from MEND_fails
 }
-MEND_excluded_profiles = MEND_fails | MEND_runs_at_first_but_then_fails
+MEND_excluded_profiles = MEND_fails | MEND_runs_but_output_is_problematic
 
 
 def run_model(model, profile, *, save_pkl=True, force_rerun=False):
@@ -125,7 +125,6 @@ def run_model(model, profile, *, save_pkl=True, force_rerun=False):
     else:
         logger.info(f'Running {m}.')
         try:
-            #m['error']
             for ds in required_datasets:
                 if not m._file_groups['pickle'][ds].exists():
                     m.get(ds)
@@ -152,6 +151,8 @@ def run_all_models_all_profiles(njobs, models=None, profiles=None, **kwargs):
         models = get_all_models()
     if profiles is None:
         profiles = get_all_profiles()
+
+    kwargs.setdefault('save_pkl', True) # save model outputs as pickle files
 
     if njobs == 1: # run on 1 core
         for model in models:
