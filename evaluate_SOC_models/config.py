@@ -24,6 +24,9 @@ __all__ = [
 ]
 
 
+_PACKAGEPATH = Path(__file__).resolve().parent
+
+
 class ConfigFile(DataFile):
     """Configuration file managed by :py:mod:`configparser`."""
 
@@ -41,9 +44,7 @@ class DefaultConfigFile(ConfigFile):
     """Default configuration file for the ``evaluate_SOC_models`` package."""
 
     def __init__(self):
-        filename = 'config_defaults.ini'
-        savedir = Path(__file__).resolve().parent # path of current file
-        super().__init__(savedir / filename, readonly=True)
+        super().__init__(_PACKAGEPATH / 'config_defaults.ini', readonly=True)
 
 
 class CustomConfigFile(ConfigFile):
@@ -56,9 +57,7 @@ class CustomConfigFile(ConfigFile):
     """
 
     def __init__(self, **kwargs):
-        filename = 'config.ini'
-        savedir = Path(__file__).resolve().parent # path of current file
-        super().__init__(savedir / filename, **kwargs)
+        super().__init__(_PACKAGEPATH / 'config.ini', **kwargs)
 
 
 def get_config():
@@ -76,15 +75,14 @@ def get_config():
         return DefaultConfigFile().read()
 
 
-def print_config(*, raw=False):
+def print_config():
     config = get_config()
-    print('')
-    _packagepath = Path(__file__).resolve().parent
-    print(f'# Note: Paths are relative to "{_packagepath}", unless absolute.')
     print('')
     for section in config.sections():
         print(f'[{section}]')
-        for name, value in config.items(section, raw=raw):
+        for name, value in config.items(section):
+            if section == 'path': # transform to absolute path
+                value = ( _PACKAGEPATH / Path(value).expanduser() ).resolve()
             print(f'{name} = {value}')
         print('')
 
@@ -102,10 +100,9 @@ def reset_defaults():
 
 
 def set_log_filename(filename):
-    filename = str(filename)
-    if not filename.strip():
-        raise ValueError(f'Cannot set log_filename "{filename}"')
-    _set_config('log', 'filename', str(filename))
+    if not str(filename).strip():
+        raise ValueError(f'Cannot set [log] filename = "{filename}"')
+    _set_config('log', 'filename', filename)
 
 def enable_log():
     _set_config('log', 'logfile', 'enabled')
@@ -120,17 +117,16 @@ def set_verbose():
     _set_config('log', 'console', 'enabled')
 
 def set_dump_path(path):
-    _set_path('path', 'dump', path)
+    _set_path('dump', path)
 
 
 def _set_path(name, path):
-    path = str(path)
-    if not path.strip():
-        raise ValueError(f'Cannot set path "{path}"')
+    path = ( Path.cwd() / Path(path).expanduser() ).resolve()
     _set_config('path', name, path)
 
 
 def _set_config(section, name, value):
+    value = str(value).strip()
     config = get_config()
     config[section][name] = value
     CustomConfigFile().write(config)
@@ -146,6 +142,8 @@ def _ask_to_restart_kernel():
 
 
 def main():
+
+    global ASK_TO_RESTART_KERNEL
 
     import sys
     import argparse
@@ -204,7 +202,7 @@ def main():
     elif args.get_logfile:
         print(LOGFILEPATH)
     else:
-        if args.set_dump:
+        if '-set-dump' in sys.argv: # if args.set_dump:
             set_dump_path(args.set_dump)
         if args.set_quiet:
             set_quiet()
