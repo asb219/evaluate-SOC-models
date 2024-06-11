@@ -101,6 +101,63 @@ if __name__ == '__main__': # if-condition necessary when multiprocessing
     ### PRODUCE RESULT TABLES ###
     #############################
 
+    def write_column_description(column):
+        if column == 'soc_kgCm2':
+            return 'Soil organic carbon stocks (kgC/m2)'
+        if column == 'son':
+            return 'Soil organic nitrogen stocks (gN/cm2)'
+        if column == 'bd':
+            return 'Soil bulk density (g/cm3)'
+        if column == 'c_org':
+            return 'Organic carbon concentration (weight percent)'
+        if column == 'lyr_top':
+            return 'Depth (cm) of the top of the soil layer'
+        if column == 'lyr_bot':
+            return 'Depth (cm) of the bottom of the soil layer'
+        if column in ('sand', 'silt', 'clay'):
+            return column.capitalize() + ' content (%)'
+        if '_14c' in column:
+            info = 'Delta14C (permille) of '
+        elif '_13c' in column:
+            info = 'delta13C (permille) of '
+        elif '_15n' in column:
+            info = 'delta15N (permille) of '
+        elif '_c_perc' in column:
+            info = 'Contribution (%) to soil organic carbon stocks of '
+        elif column.endswith('_k'):
+            info = 'Turnover rate (1/year) of the steady-state 1-pool model'\
+                ' fitted to the observed Delta14C data of '
+        elif column.endswith('_success'):
+            info = 'Successful termination of scipy.optimize.minimize when'\
+                ' fitting the steady-state 1-pool model to the observed'\
+                ' Delta14C data of '
+        else:
+            return ''
+        if column.startswith('bulk'):
+            info += 'bulk soil organic carbon'
+        elif column.startswith('HF'):
+            info += 'the heavy density fraction (HF)'\
+                ' or mineral-associated organic matter (MAOM)'
+        elif column.startswith('fLF'):
+            info += 'the free light density fraction (fLF)'
+        elif column.startswith('oLF'):
+            info += 'the occluded light density fraction (oLF)'
+        elif column.startswith('LF'):
+            info += 'the light density fraction (LF)'\
+                ' or particulate organic matter (POM)'
+        else:
+            return ''
+        if column.endswith('_2000'):
+            info += ' normalized to the year 2000'
+        return info
+
+    def get_info(df):
+        info = pd.Series({
+            c: write_column_description(c) for c in df.columns
+        }, name='Description').to_frame()
+        info.index.name = 'Column name'
+        return info
+
     def gCcm2_to_kgCm2(df):
         df = df.copy().rename(columns={'soc':'soc_kgCm2'})
         df['soc_kgCm2'] *= 10 # gC/cm2 -> kgC/m2
@@ -111,16 +168,22 @@ if __name__ == '__main__': # if-condition necessary when multiprocessing
     excel_file.write(gCcm2_to_kgCm2(obs), sheet_name='observed')
     for model_name, pred in predicted.items():
         excel_file.write(gCcm2_to_kgCm2(pred), sheet_name=model_name)
+    info = get_info(obs.rename(columns={'soc':'soc_kgCm2'}))
+    excel_file.write(info, sheet_name='info')
 
     excel_file = PandasExcelFile(TABLEPATH/'error.xlsx')
     for model_name, err in error.items():
         excel_file.write(gCcm2_to_kgCm2(err), sheet_name=model_name)
+    info = get_info(err.rename(columns={'soc':'soc_kgCm2'}))
+    excel_file.write(info, sheet_name='info')
 
     israd_data = SelectedISRaDData().data
     constant_forcing = AllConstantForcingData().data
     excel_file = PandasExcelFile(TABLEPATH/'israd_and_soilgrids_data.xlsx')
     excel_file.write(gCcm2_to_kgCm2(israd_data), sheet_name='ISRaD data')
     excel_file.write(constant_forcing, sheet_name='forcing (ISRaD+SoilGrids)')
+    info = get_info(israd_data.rename(columns={'soc':'soc_kgCm2'})) 
+    excel_file.write(info[info.Description!=''], sheet_name='info')
 
     def gCcm2_to_kgCm2(df):
         df = df.copy().rename(index={'soc':'soc_kgCm2'})
@@ -236,7 +299,7 @@ if __name__ == '__main__': # if-condition necessary when multiprocessing
             show=False, save=path/f'all_models_{variable}.pdf'
         )
 
-    example_profile = ('Meyer_2012', 'Matsch', 'Pasture')
+    example_profile = ('Meyer_2012', 'Stubai', 'Abandoned')
     filename = 'predicted_14C_example_' + '_'.join(example_profile) + '.pdf'
     plot_predicted_14C_all_models(
         profile=example_profile, ylim=(-100, 500), t0='1950', t1='2015',
@@ -274,6 +337,13 @@ if __name__ == '__main__': # if-condition necessary when multiprocessing
     excel_file = PandasExcelFile(TABLEPATH / (filename + '.xlsx'))
     excel_file.write(somic_good, sheet_name='using Fraction Modern (good)')
     excel_file.write(somic_bad, sheet_name='using 14C age (inaccurate)')
+    info = pd.Series({
+        'bulk_14c': 'Predicted Delta14C (permille) of bulk soil organic carbon',
+        'LF_14c': 'Predicted Delta14C (permille) of particulate organic matter (POM)',
+        'HF_14c': 'Predicted Delta14C (permille) of mineral-associated organic matter (MAOM)'
+    }, name='Description').to_frame()
+    info.index.name = 'Column name'
+    excel_file.write(info, sheet_name='info')
 
     atmosphere = Graven2017CompiledRecordsData().Delta14C.NH
 
@@ -306,7 +376,19 @@ if __name__ == '__main__': # if-condition necessary when multiprocessing
     df12 = MIMICS2021OutputFile('12C').read().set_index('year').loc[1950:, pools]
     Delta14C = df14/df12 * 1000 - 1000
 
-    Delta14C.to_excel(TABLEPATH / (filename + '.xlsx'), sheet_name='Delta14C')
+    excel_file = PandasExcelFile(TABLEPATH / (filename + '.xlsx'))
+    excel_file.write(Delta14C, sheet_name='predicted Delta14C (permille)')
+    info = pd.Series({
+        'LIT_m': 'metabolic litter pool',
+        'LIT_s': 'structural litter pool',
+        'MIC_r': 'r-strategy microbe pool',
+        'MIC_K': 'K-strategy microbe pool',
+        'SOM_p': 'physicochemically protected soil organic matter pool',
+        'SOM_c': 'chemically recalcitrant soil organic matter pool',
+        'SOM_a': 'available soil organic matter pool'
+    }, name='Description').to_frame()
+    info.index.name = 'Pool name'
+    excel_file.write(info, sheet_name='info')
 
     atmosphere = Graven2017CompiledRecordsData().Delta14C.loc['1950':, 'NH']
     atmosphere.index = atmosphere.index.year
@@ -334,7 +416,7 @@ if __name__ == '__main__': # if-condition necessary when multiprocessing
     # The quick and dirty way: Add all the files in TABLEPATH and PLOTPATH
     # to a compressed zip archive while labeling them as Tables and Figures
 
-    def add_to_zipfile(zf, path, arc_dir='', label='', rename=''):
+    def add_to_zipfile(zf, path, arc_dir, label, rename=''):
 
         label = MANUSCRIPT_LABEL.get(path, label)
         arc_filename = rename or (label+' '+path.name)
@@ -342,8 +424,8 @@ if __name__ == '__main__': # if-condition necessary when multiprocessing
 
         if path.is_dir():
             arc_dir = arc_file + '/'
-            zf.mkdir(str(arc_dir))
-            added = [arc_dir]
+            zf.mkdir(arc_dir)
+            added = [(path, arc_dir)]
             label_nr = 0
             for p in sorted(path.iterdir()):
                 if p.name.startswith(('.')):
@@ -353,8 +435,8 @@ if __name__ == '__main__': # if-condition necessary when multiprocessing
                 added += add_to_zipfile(zf, p, arc_dir, label+f'.{label_nr}')
             return added
 
-        zf.write(path, str(arc_file))
-        return [arc_file]
+        zf.write(path, arc_file)
+        return [(path, arc_file)]
 
     archive = SAVEPATH / 'Supplementary_Material_for_associated_manuscript.zip'
 

@@ -26,7 +26,7 @@ dependencies:
         - -e . # editable installation of evaluate-SOC-models using setup.py
 
     # Dependencies of the SOMic model's R package:
-    - r-base=4.2
+    - r-base>=4.1,<4.3
     - r-devtools
     - r-recommended
     - r-ggplot2
