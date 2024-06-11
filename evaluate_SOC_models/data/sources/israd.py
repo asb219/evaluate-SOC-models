@@ -50,9 +50,11 @@ class ISRaDArchive(FileFromURL, ZipArchive):
             "raw/629b14634d0ddaadf523c662f2cc45b4dad29ae5/ISRaD_data_files/"
             "database/ISRaD_database_files.zip"
         ) # ISRaD v 2.5.5.2023-09-20 (commit 629b146)
-        filename = "ISRaD_database_files v 2.5.5.2023-09-20.zip"
-        savedir = DOWNLOADPATH/'ISRaD/'
+        version = '2.5.5.2023-09-20'
+        filename = f"ISRaD_database_files v {version}.zip"
+        savedir = DOWNLOADPATH / 'ISRaD'
         super().__init__(savedir / filename, DL_link)
+        self.version = version
 
 
 
@@ -60,10 +62,14 @@ class ISRaDExtraFile(PandasExcelFile, FileFromArchive):
 
     def __init__(self, **kwargs):
         archive = ISRaDArchive()
-        archived_filename = re.compile(r"ISRaD_extra_list_v.*\.xlsx") # regex
-        filename = "ISRaD_extra.xlsx"
-        savedir = DOWNLOADPATH/'ISRaD/'
+        # archived_filename = re.compile(r"ISRaD_extra_list_v.*\.xlsx") # regex
+        # filename = "ISRaD_extra.xlsx"
+        version = archive.version
+        archived_filename = f"ISRaD_extra_list_v {version}.xlsx"
+        filename = archived_filename
+        savedir = DOWNLOADPATH / 'ISRaD'
         super().__init__(savedir / filename, archive, archived_filename, **kwargs)
+        self.version = version
 
 
 
@@ -116,7 +122,7 @@ class ISRaDData(Data):
 
 
     def __init__(self, topsoil_min_depth=10, topsoil_max_depth=20, *,
-            save_pkl=True, save_csv=False, save_xlsx=False):
+            save_pkl=True, save_csv=False, save_xlsx=True):
 
         topsoil_min_depth = int(np.round(topsoil_min_depth, 0))
         topsoil_max_depth = int(np.round(topsoil_max_depth, 0))
@@ -128,14 +134,14 @@ class ISRaDData(Data):
         name = 'israd'
         description = ('International Soil Radiocarbon Database. '
             'The "topsoil_*" datasets are integrated over the top '
-            f'{topsoil_min_depth} to {topsoil_max_depth}cm of the soil.')
+            f'{topsoil_min_depth} or {topsoil_max_depth}cm of the soil.')
 
         super().__init__(savedir, name, description,
             save_pkl=save_pkl, save_csv=save_csv, save_xlsx=save_xlsx)
 
         # Specify top and bottom boundaries of integrated data in file naming
         for d in ['topsoil_data']:
-            depth = f'top_{topsoil_min_depth}_to_{topsoil_max_depth}cm_' + d
+            depth = d + f'_top_{topsoil_min_depth}_or_{topsoil_max_depth}cm'
             name_depth = self.name + '_' + depth
             self._file_groups['pickle'][d].filename = name_depth + '.pkl.gz'
             self._file_groups['csv'][d].filename = name_depth + '.csv'
@@ -183,18 +189,15 @@ class ISRaDData(Data):
 
     def _process_entry_info(self):
         entry_info = self.sourcefiles['data'].read(
-            sheet_name = 'metadata',
-            # usecols = {'entry_name', 'doi', 'bibliographical_reference'}
+            sheet_name = 'metadata'
         ).drop_duplicates('entry_name').set_index('entry_name').sort_index()
         # drop_duplicates is necessary because Gaudinski_2001 is listed twice
-        #assert entry_info.index.is_unique
         return entry_info
 
 
     def _process_site_info(self):
         site_info = self.sourcefiles['data'].read(
-            sheet_name = 'site',
-            #usecols = {'entry_name', 'site_name', 'site_lat', 'site_long'}
+            sheet_name = 'site'
         ).set_index(['entry_name', 'site_name']).sort_index()
         assert site_info.index.is_unique
         return site_info
@@ -404,14 +407,15 @@ class ISRaDData(Data):
             (lyr['lyr_top'] >= 0)
             & (lyr['lyr_bot'] <= max_depth)
             & (lyr['lyr_top'] < min_depth)
-            & (lyr['lyr_top'] != lyr['lyr_bot']) # so many top == bot ...
+            & (lyr['lyr_top'] < lyr['lyr_bot']) # many layers with top == bot
         ].copy()
 
         # Prepare to integrate data over depth
         topsoil['lyr_height'] = topsoil['lyr_bot'] - topsoil['lyr_top']
         topsoil['lyr_bulk_mass'] = topsoil['lyr_bd'] * topsoil['lyr_height']
-        for f in ['HF', 'fLF', 'oLF']:
-            topsoil[f+'_c_abs'] = topsoil[f+'_c_perc'] * topsoil['lyr_soc']
+        topsoil['HF_c_abs'] = topsoil['HF_c_perc'] * topsoil['lyr_soc']
+        topsoil['fLF_c_abs'] = topsoil['fLF_c_perc'] * topsoil['lyr_soc']
+        topsoil['oLF_c_abs'] = topsoil['oLF_c_perc'] * topsoil['lyr_soc']
 
         integrator_dict = {
             'lyr_bd': 'lyr_height',
@@ -434,12 +438,13 @@ class ISRaDData(Data):
         integrators = list(integrator_dict.values())
 
         def integrate(df):
-            if len(df) == 1:
+            if len(df) == 1: # no need to integrate if already single layer
                 return df.squeeze()
 
             # Take average over repeat measurements
             df = df.groupby(['lyr_top', 'lyr_bot'], as_index=False).mean()
-            if len(df) == 1:
+
+            if len(df) == 1: # no need to integrate if already single layer
                 return df.squeeze()
 
             df[integrands] *= df[integrators].values
@@ -451,31 +456,37 @@ class ISRaDData(Data):
 
             if not intervals.is_overlapping \
             and all(sorted_intervals[:-1].right == sorted_intervals[1:].left):
-                # we have a contiguous non-overlapping integration domain
                 series = df.sum(axis=0, skipna=False)
-            else:
-                series = pd.Series(0, index=df.columns, dtype='float')
-                bounds = sorted(set(
+
+            else: # overlapping intervals or non-contiguous integration domain
+                new_bounds = sorted(set(
                     [i.left for i in intervals] + [i.right for i in intervals]
                 ))
-                for lower, upper in zip(bounds[:-1], bounds[1:]):
-                    interval = pd.Interval(lower, upper, closed='neither')
-                    overlapping_index = intervals.overlaps(interval)
-                    overlapping = df[overlapping_index]
-                    if len(overlapping) == 0: # If domain is non-contiguous,
-                        return pd.Series(np.nan, index=df.columns) # return NaN
-                    overlapping_intervals = intervals[overlapping_index]
-                    weights = (interval.length
-                        / overlapping_intervals.length.values[:,None])
-                    series += (overlapping * weights).mean(axis=0, skipna=True)
+                new_intervals = pd.IntervalIndex.from_arrays(
+                    new_bounds[:-1], new_bounds[1:], closed='neither'
+                )
+                overlaps = np.array([ # overlaps between new and old intervals
+                    intervals.overlaps(new_interval) # 1d-array of True/False
+                    for new_interval in new_intervals
+                ])
+                if not overlaps.any(axis=1).all(): # non-contiguous domain
+                    return pd.Series(np.nan, index=df.columns) # return NaN
+
+                series = sum(( # integrate over depth, averaging on overlaps
+                        df[overlap] * new_interval.length
+                        / intervals[overlap].length.values[:,None]
+                    ).mean(axis=0, skipna=True)
+                    for new_interval, overlap in zip(new_intervals, overlaps)
+                )
 
             series[integrands] /= series[integrators].values
             series['lyr_top'] = df['lyr_top'].min()
             series['lyr_bot'] = df['lyr_bot'].max()
+
             return series
 
         # Integrate over layers for each profile and for each sampling date
-        topsoil = topsoil.groupby([ # 'lyr_name' is the index for the groups
+        topsoil = topsoil.groupby([ # 'lyr_name' is the index for each group
             'entry_name', 'site_name', 'pro_name', 'lyr_obs_date'
         ]).apply(integrate).reset_index('lyr_obs_date')
 

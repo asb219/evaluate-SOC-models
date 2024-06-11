@@ -156,9 +156,9 @@ Produce plots and tables of the results by running
 python produce_all_results.py
 ```
 
-On the first run, this will download 6.2 GB of forcing data
+On the first run, this will download more than 6 GB of forcing data
 and run the 5 soil models on 77 selected topsoil profiles from ISRaD,
-producing 6.3 GB of output data.
+producing almost 7 GB of output data.
 All resulting plots and tables will be saved in the `dump/Results` directory by default.
 
 
@@ -166,10 +166,10 @@ All resulting plots and tables will be saved in the `dump/Results` directory by 
 
 To run the models in parallel, specify the number of CPU cores
 with the `-njobs` flag.
-For example, if you want to run on 7 cores, write
+For example, if you want to run on 3 cores, write
 
 ```
-python produce_all_results.py -njobs 7
+python produce_all_results.py -njobs 3
 ```
 
 However, be aware that each run of the MEND model will produce
@@ -194,7 +194,7 @@ which takes precedence over `config_defaults.ini` in the `evaluate_SOC_models` d
 
 ### File storage location
 
-Running the `produce_all_results.py` script produces 12.5 GB of permanent files,
+Running the `produce_all_results.py` script produces 13 GB of permanent files,
 as well as a total of over 300 GB of temporary files which are written to disk
 and quickly removed as the script runs MEND over the different soil profiles.
 All those files are (permanently or temporarily) stored in the `dump` directory by default.
@@ -212,6 +212,7 @@ config -set-dump "/your/new/path/to/dump"
 ```
 
 
+
 ## Issues
 
 If you encounter a problem with my code (or some other aspect of this project),
@@ -222,7 +223,7 @@ please raise an [issue](https://github.com/asb219/evaluate-SOC-models/issues) on
 
 The MEND model experiences some numerical stability issues when run
 with the forcing data associated with some of the soil profiles.
-I am currently preventing MEND from running on 12 blacklisted profiles which fail on my computer,
+I am currently preventing MEND from running on 9 blacklisted profiles which fail on my computer,
 but the exact list of profiles incompatible with MEND seems to depend on the Fortran compiler.[^7]
 
 If MEND does not work for a specific soil profile on your computer, just
