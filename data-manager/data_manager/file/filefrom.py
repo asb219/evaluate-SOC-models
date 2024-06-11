@@ -166,7 +166,7 @@ class FileFromArchive(FileFrom):
             if extract_path is None:
                 logger.debug('Saved to unknown path.')
             else:
-                logger.debug('Saved to "{extract_path}".')
+                logger.debug(f'Saved to "{extract_path}".')
 
         try:
             assert self.exists()

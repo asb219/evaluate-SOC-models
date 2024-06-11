@@ -235,7 +235,9 @@ class ZipArchive(Archive):
 
     def get_zip_file(self, mode='r', **kwargs):
         """Return an open :py:class:`zipfile.ZipFile` object"""
-        return zipfile.ZipFile(self.claim().path, mode, **kwargs)
+        if mode == 'r':
+            self.claim()
+        return zipfile.ZipFile(self.path, mode, **kwargs)
 
     def get_filename_list(self):
         """Return list of str"""
@@ -256,7 +258,9 @@ class SevenZipArchive(Archive):
 
     def get_zip_file(self, mode='r', **kwargs):
         """Return an open :py:class:`py7zr.SevenZipFile` object"""
-        return py7zr.SevenZipFile(self.claim().path, mode, **kwargs)
+        if mode == 'r':
+            self.claim()
+        return py7zr.SevenZipFile(self.path, mode, **kwargs)
 
     def get_filename_list(self):
         """Return list of str"""
