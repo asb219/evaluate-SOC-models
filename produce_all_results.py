@@ -17,6 +17,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+import zipfile
 import argparse
 import multiprocessing
 import pandas as pd
@@ -35,7 +36,8 @@ from evaluate_SOC_models.results import (
     MEND_C_works_but_14C_fails,
     run_all_models_all_profiles,
     get_all_results,
-    get_bias_and_rmse
+    get_bias_and_rmse,
+    SORTED_VARIABLE_NAMES
 )
 from evaluate_SOC_models.models import (
     MIMICSData,
@@ -58,6 +60,7 @@ if __name__ == '__main__': # if-condition necessary when multiprocessing
 
     MODELS = (MIMICSData, MillennialData, SOMicData, CORPSEData, MENDData)
     PROFILES = AllObservedData().data.index
+    MANUSCRIPT_LABEL = {} # labels of plots and tables in associated manuscript
 
     ######################
     ### RUN ALL MODELS ###
@@ -127,6 +130,8 @@ if __name__ == '__main__': # if-condition necessary when multiprocessing
     bias, rmse = get_bias_and_rmse(error=error)
     gCcm2_to_kgCm2(bias).to_csv(TABLEPATH/'all_bias.csv', float_format='%.1f')
     gCcm2_to_kgCm2(rmse).to_csv(TABLEPATH/'all_rmse.csv', float_format='%.1f')
+    MANUSCRIPT_LABEL[TABLEPATH/'all_bias.csv'] = 'Tab.2'
+    MANUSCRIPT_LABEL[TABLEPATH/'all_rmse.csv'] = 'Tab.2'
 
 
     ############################
@@ -140,6 +145,8 @@ if __name__ == '__main__': # if-condition necessary when multiprocessing
     plot_israd_timeseries(
         figsize=(7,4), show=False, save=PLOTPATH/'israd_timeseries.pdf'
     )
+    MANUSCRIPT_LABEL[PLOTPATH/'israd_map.pdf'] = 'Fig.1'
+    MANUSCRIPT_LABEL[PLOTPATH/'israd_timeseries.pdf'] = 'Fig.2'
 
     plot_boxplots_C(
         predicted=predicted, observed=observed,
@@ -149,10 +156,29 @@ if __name__ == '__main__': # if-condition necessary when multiprocessing
         predicted=predicted_after_1995, observed=observed_after_1995,
         show=False, save=PLOTPATH/'boxplots_14C.pdf'
     )
+    MANUSCRIPT_LABEL[PLOTPATH/'boxplots_C.pdf'] = 'Fig.4'
+    MANUSCRIPT_LABEL[PLOTPATH/'boxplots_14C.pdf'] = 'Fig.5'
+
+    plot_data_vs_clay(
+        plot_type='predicted', predicted=predicted_after_1995,
+        observed=observed_after_1995, error=error_after_1995,
+        normalized_to_2000=False,
+        save=PLOTPATH/'predicted_vs_clay.pdf',
+        save_kwargs=dict(bbox_inches='tight'), show=False
+    )
+    plot_data_vs_temperature(
+        plot_type='predicted', predicted=predicted_after_1995,
+        observed=observed_after_1995, error=error_after_1995,
+        normalized_to_2000=False,
+        save=PLOTPATH/'predicted_vs_temperature.pdf',
+        save_kwargs=dict(bbox_inches='tight'), show=False
+    )
+    MANUSCRIPT_LABEL[PLOTPATH/'predicted_vs_clay.pdf'] = 'Fig.8'
+    MANUSCRIPT_LABEL[PLOTPATH/'predicted_vs_temperature.pdf'] = 'Fig.7'
 
     for normalized_to_2000, path in [
-        (True, PLOTPATH/'environment_plots'/'normalized_to_year_2000'),
-        (False, PLOTPATH/'environment_plots'/'without_normalization')
+        (False, PLOTPATH/'environment_plots'/'not_normalized'),
+        (True, PLOTPATH/'environment_plots'/'normalized_to_year_2000')
     ]:
         for plot_type in ['predicted', 'error', 'absolute_error']:
             plot_data_vs_clay(
@@ -200,18 +226,23 @@ if __name__ == '__main__': # if-condition necessary when multiprocessing
 
     path = PLOTPATH/'predicted_vs_observed'
     for model in MODELS:
-        plot_predicted_vs_observed(
-            model=model, predicted=predicted[model.model_name], observed=observed,
-            show=False, save=path/f'{model.model_name}.pdf'
+        plot_predicted_vs_observed_all_variables(
+            model, predicted=predicted[model.model_name], observed=observed,
+            show=False, save=path/f'all_variables_{model.model_name}.pdf'
+        )
+    for variable in SORTED_VARIABLE_NAMES:
+        plot_predicted_vs_observed_all_models(
+            variable, predicted=predicted, observed=observed,
+            show=False, save=path/f'all_models_{variable}.pdf'
         )
 
     example_profile = ('Meyer_2012', 'Matsch', 'Pasture')
-    profile_name = '_'.join(example_profile)
+    filename = 'predicted_14C_example_' + '_'.join(example_profile) + '.pdf'
     plot_predicted_14C_all_models(
-        profile=example_profile,
-        ylim=(-100, 500), t0='1950', t1='2015',
-        show=False, save=PLOTPATH/f'predicted_14C_example_{profile_name}.pdf'
+        profile=example_profile, ylim=(-100, 500), t0='1950', t1='2015',
+        show=False, save=PLOTPATH/filename
     )
+    MANUSCRIPT_LABEL[PLOTPATH/filename] = 'Fig.6'
 
     MEND_no_14C_profiles = MEND_excluded_profiles | MEND_C_works_but_14C_fails
     for model in MODELS:
@@ -229,7 +260,7 @@ if __name__ == '__main__': # if-condition necessary when multiprocessing
 
     # Show that SOMic's original 14C implementation is inaccurate
 
-    example_profile = ('Baisden_2002', 'Riverbank', 'Riverbank.1997')
+    example_profile = ('Schrumpf_2013', 'Bugac', 'Bugac.1')
     filename = 'check_14C_implementation_SOMic_' + '_'.join(example_profile)
 
     somic_good = SOMicData( # use the more accurate implementation with FM
@@ -260,8 +291,10 @@ if __name__ == '__main__': # if-condition necessary when multiprocessing
     plt.ylabel('$\Delta^{14}$C (‰)', size=12)
     plt.legend(loc='upper right')
     plt.tight_layout()
-    plt.savefig(PLOTPATH / (filename + '.pdf'))
+    save = PLOTPATH / (filename + '.pdf')
+    plt.savefig(save)
     plt.close()
+    MANUSCRIPT_LABEL[save] = 'Fig.E1'
 
 
     # Show that MIMICS's 14C implementation (Wang et al., 2021) doesn't work
@@ -288,5 +321,43 @@ if __name__ == '__main__': # if-condition necessary when multiprocessing
     plt.ylabel('$\Delta^{14}$C (‰)', size=12)
     plt.legend(loc='upper right')
     plt.tight_layout()
-    plt.savefig(PLOTPATH / (filename + '.pdf'))
+    save = PLOTPATH / (filename + '.pdf')
+    plt.savefig(save)
     plt.close()
+    MANUSCRIPT_LABEL[save] = 'Fig.E2'
+
+
+    ###############################################################
+    ### CREATE SUPPLEMENTARY MATERIAL FOR ASSOCIATED MANUSCRIPT ###
+    ###############################################################
+
+    # The quick and dirty way: Add all the files in TABLEPATH and PLOTPATH
+    # to a compressed zip archive while labeling them as Tables and Figures
+
+    def add_to_zipfile(zf, path, arc_dir='', label='', rename=''):
+
+        label = MANUSCRIPT_LABEL.get(path, label)
+        arc_filename = rename or (label+' '+path.name)
+        arc_file = arc_dir + arc_filename
+
+        if path.is_dir():
+            arc_dir = arc_file + '/'
+            zf.mkdir(str(arc_dir))
+            added = [arc_dir]
+            label_nr = 0
+            for p in sorted(path.iterdir()):
+                if p.name.startswith(('.')):
+                    continue
+                if p not in MANUSCRIPT_LABEL:
+                    label_nr += 1
+                added += add_to_zipfile(zf, p, arc_dir, label+f'.{label_nr}')
+            return added
+
+        zf.write(path, str(arc_file))
+        return [arc_file]
+
+    archive = SAVEPATH / 'Supplementary_Material_for_associated_manuscript.zip'
+
+    with zipfile.ZipFile(archive, mode='w', compression=zipfile.ZIP_LZMA) as zf:
+        added = add_to_zipfile(zf, TABLEPATH, '', 'Tab.S', rename='Tables')
+        added += add_to_zipfile(zf, PLOTPATH, '', 'Fig.S', rename='Figures')
