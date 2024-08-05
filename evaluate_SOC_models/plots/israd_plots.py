@@ -57,7 +57,6 @@ def plot_israd_map(projection='Miller', plot_MAT=True, plot_clay=True):
     ax.add_feature(cfeature.LAND.with_scale('110m'), color='lightgrey', zorder=0)
     ax.add_feature(cfeature.OCEAN.with_scale('110m'), zorder=100)
     ax.add_feature(cfeature.LAKES.with_scale('110m'), zorder=101)
-    #ax.add_feature(cfeature.BORDERS.with_scale('110m'))
     ax.coastlines(zorder=102)
 
     data = SelectedISRaDData()['data'].drop_duplicates(
@@ -71,11 +70,12 @@ def plot_israd_map(projection='Miller', plot_MAT=True, plot_clay=True):
             alpha=1,
             marker='o',
             s=40, # marker size
-            c=color, # marker face color
+            c=color//10*10+5, # binned marker face color
             edgecolors='black',
             linewidths=0.7 # marker edge width
         )
-        fig.colorbar(p, label='Topsoil clay content (%)', boundaries=[0,10,20,30,40,50], extend='max')
+        fig.colorbar(p, label='Topsoil clay content (%)', extend='max',
+            boundaries=[0,10,20,30,40,50,60], values=[5,15,25,35,45,55])
     else:
         color = 'red'
         ax.plot(lon, lat, ls='', transform=crs, zorder=200,
@@ -98,8 +98,8 @@ def plot_israd_map(projection='Miller', plot_MAT=True, plot_clay=True):
         # Add data at 360 degrees (equals data at 0 degrees)
         MAT_data = np.append(MAT_data, MAT_data[:,[0]], axis=1)
         p = ax.contourf(lons, lats, MAT_data, transform=crs, cmap='RdBu_r',
-            levels=[-20,-10,0,10,20,30,40], zorder=10) #, extend='min')
-        fig.colorbar(p, label='Topsoil temperature (°C)') #, boundaries=[-10,0,10,20,30,40], extend='min')
+            levels=[-20,-10,0,10,20,30,40], zorder=10)
+        fig.colorbar(p, label='Topsoil temperature (°C)')
 
     gl = ax.gridlines(draw_labels=True, lw=0.2, color='k', alpha=1, ls='-', zorder=150)
     gl.top_labels = False
@@ -120,39 +120,27 @@ def plot_israd_timeseries(figsize=(4,3.5)):
             marker='o',
             markersize=markersize,
             alpha=0.4,
-            # marker='o',
-            # markersize=5,
-            # #color='tab:blue',
-            # markerfacecolor='mediumblue',
-            # markeredgecolor='mediumblue',
+            markeredgecolor='none',
             zorder=50,
             label='bulk SOC'
         ),
         'LF_14c': dict(
             ls='',
             color='C2',
-            #marker='^',
             markersize=markersize+1,
             alpha=0.4,
             marker=8,
-            # markersize=6,
-            # #color='tab:orange',
-            # markerfacecolor='none',
-            # markeredgecolor='darkred',
+            markeredgecolor='none',
             zorder=40,
             label='POM'
         ),
         'HF_14c': dict(
             ls='',
             color='C1',
-            #marker='v',
             markersize=markersize+1,
             alpha=0.4,
             marker=9,
-            # markersize=6,
-            # #color='darkcyan',
-            # markerfacecolor='none',
-            # markeredgecolor='darkcyan',
+            markeredgecolor='none',
             zorder=30,
             label='MAOM'
         )

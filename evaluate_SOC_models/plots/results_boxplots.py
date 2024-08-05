@@ -73,11 +73,11 @@ def _plot_boxplots(variables, predicted=None, observed=None):
 
         if variable.endswith('14c'):
             ax.axhline(0, zorder=-10, color='k', alpha=0.5, lw=0.8)
-            ax.set_ylim((-100, None))
+            ax.set_ylim((-100, 250))
 
         elif variable.endswith('perc'):
             ax.set_ylim((0,100))
-            ax.set_yticks(ticks:=ax.get_yticks(), [f'{k:.0f}%' for k in ticks])
+            ax.set_yticks(ticks:=ax.get_yticks(), [f'{k:.0f}$\,$%' for k in ticks])
 
         elif variable == 'soc':
             ax.set_yscale('log')

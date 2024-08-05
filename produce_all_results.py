@@ -49,7 +49,7 @@ from evaluate_SOC_models.models import (
 from evaluate_SOC_models.models.mimics2021 import MIMICS2021OutputFile
 from evaluate_SOC_models.path import SAVEPATH
 from evaluate_SOC_models.plots import * # functions that start with `plot_`
-
+from evaluate_SOC_models.plots.utils import _savefig as _SAVEFIG
 
 TABLEPATH = SAVEPATH / 'tables'
 PLOTPATH = SAVEPATH / 'plots'
@@ -201,43 +201,50 @@ if __name__ == '__main__': # if-condition necessary when multiprocessing
     ### PRODUCE RESULT PLOTS ###
     ############################
 
-    plot_israd_map(
-        show=False, save=PLOTPATH/'israd_map.pdf',
-        save_kwargs=dict(bbox_inches='tight')
+    _, save_paths = plot_israd_map(
+        show=False, save=[PLOTPATH/'israd_map.png'], return_save_paths=True,
+        save_kwargs=[dict(bbox_inches='tight', dpi=220,
+            remove_alpha_channel=True, P_image=True, P_colors=256)]
     )
-    plot_israd_timeseries(
-        figsize=(7,4), show=False, save=PLOTPATH/'israd_timeseries.pdf'
+    MANUSCRIPT_LABEL.update({path: 'Fig.1' for path in save_paths})
+    _, save_paths = plot_israd_timeseries(
+        figsize=(7,4), show=False, return_save_paths=True,
+        save=[PLOTPATH/'israd_timeseries.pdf', PLOTPATH/'israd_timeseries.png'],
+        save_kwargs=[{}, dict(dpi=2067/7, remove_alpha_channel=True, P_image=True, P_colors=256)]
     )
-    MANUSCRIPT_LABEL[PLOTPATH/'israd_map.pdf'] = 'Fig.1'
-    MANUSCRIPT_LABEL[PLOTPATH/'israd_timeseries.pdf'] = 'Fig.2'
+    MANUSCRIPT_LABEL.update({path: 'Fig.2' for path in save_paths})
 
-    plot_boxplots_C(
-        predicted=predicted, observed=observed,
-        show=False, save=PLOTPATH/'boxplots_C.pdf'
+    _, save_paths = plot_boxplots_C(
+        predicted=predicted, observed=observed, return_save_paths=True,
+        show=False, save=[PLOTPATH/'boxplots_C.pdf', PLOTPATH/'boxplots_C.png'],
+        save_kwargs=[{}, dict(dpi=2067/10, remove_alpha_channel=True, P_image=True, P_colors=32)]
     )
-    plot_boxplots_14C(
-        predicted=predicted_after_1995, observed=observed_after_1995,
-        show=False, save=PLOTPATH/'boxplots_14C.pdf'
+    MANUSCRIPT_LABEL.update({path: 'Fig.4' for path in save_paths})
+    _, save_paths = plot_boxplots_14C(
+        predicted=predicted_after_1995, observed=observed_after_1995, return_save_paths=True,
+        show=False, save=[PLOTPATH/'boxplots_14C.pdf', PLOTPATH/'boxplots_14C.png'],
+        save_kwargs=[{}, dict(dpi=2067/10, remove_alpha_channel=True, P_image=True, P_colors=32)]
     )
-    MANUSCRIPT_LABEL[PLOTPATH/'boxplots_C.pdf'] = 'Fig.4'
-    MANUSCRIPT_LABEL[PLOTPATH/'boxplots_14C.pdf'] = 'Fig.5'
+    MANUSCRIPT_LABEL.update({path: 'Fig.5' for path in save_paths})
 
-    plot_data_vs_clay(
+    _, save_paths = plot_data_vs_clay(
         plot_type='predicted', predicted=predicted_after_1995,
         observed=observed_after_1995, error=error_after_1995,
-        normalized_to_2000=False,
-        save=PLOTPATH/'predicted_vs_clay.pdf',
-        save_kwargs=dict(bbox_inches='tight'), show=False
+        normalized_to_2000=False, show=False, return_save_paths=True,
+        save=[PLOTPATH/'predicted_vs_clay.pdf', PLOTPATH/'predicted_vs_clay.png'],
+        save_kwargs=[dict(bbox_inches='tight'), dict(bbox_inches='tight', dpi=2067/12,
+            remove_alpha_channel=True, P_image=True, P_colors=256)]
     )
-    plot_data_vs_temperature(
+    MANUSCRIPT_LABEL.update({path: 'Fig.8' for path in save_paths})
+    _, save_paths = plot_data_vs_temperature(
         plot_type='predicted', predicted=predicted_after_1995,
         observed=observed_after_1995, error=error_after_1995,
-        normalized_to_2000=False,
-        save=PLOTPATH/'predicted_vs_temperature.pdf',
-        save_kwargs=dict(bbox_inches='tight'), show=False
+        normalized_to_2000=False, show=False, return_save_paths=True,
+        save=[PLOTPATH/'predicted_vs_temperature.pdf', PLOTPATH/'predicted_vs_temperature.png'],
+        save_kwargs=[dict(bbox_inches='tight'), dict(bbox_inches='tight', dpi=2067/12,
+            remove_alpha_channel=True, P_image=True, P_colors=256)]
     )
-    MANUSCRIPT_LABEL[PLOTPATH/'predicted_vs_clay.pdf'] = 'Fig.8'
-    MANUSCRIPT_LABEL[PLOTPATH/'predicted_vs_temperature.pdf'] = 'Fig.7'
+    MANUSCRIPT_LABEL.update({path: 'Fig.7' for path in save_paths})
 
     for normalized_to_2000, path in [
         (False, PLOTPATH/'environment_plots'/'not_normalized'),
@@ -300,12 +307,14 @@ if __name__ == '__main__': # if-condition necessary when multiprocessing
         )
 
     example_profile = ('Meyer_2012', 'Stubai', 'Abandoned')
-    filename = 'predicted_14C_example_' + '_'.join(example_profile) + '.pdf'
-    plot_predicted_14C_all_models(
+    filename = 'predicted_14C_example_' + '_'.join(example_profile)
+    _, save_paths = plot_predicted_14C_all_models(
         profile=example_profile, ylim=(-100, 500), t0='1950', t1='2015',
-        show=False, save=PLOTPATH/filename
+        show=False, return_save_paths=True,
+        save=[PLOTPATH/(filename+'.pdf'), PLOTPATH/(filename+'.png')],
+        save_kwargs=[{}, dict(dpi=2067/10, remove_alpha_channel=True, P_image=True, P_colors=64)]
     )
-    MANUSCRIPT_LABEL[PLOTPATH/filename] = 'Fig.6'
+    MANUSCRIPT_LABEL.update({path: 'Fig.6' for path in save_paths})
 
     MEND_no_14C_profiles = MEND_excluded_profiles | MEND_C_works_but_14C_fails
     for model in MODELS:
@@ -361,10 +370,12 @@ if __name__ == '__main__': # if-condition necessary when multiprocessing
     plt.ylabel('$\Delta^{14}$C (‰)', size=12)
     plt.legend(loc='upper right')
     plt.tight_layout()
-    save = PLOTPATH / (filename + '.pdf')
-    plt.savefig(save)
+    save_path = _SAVEFIG(PLOTPATH / (filename + '.pdf'))
+    MANUSCRIPT_LABEL[save_path] = 'Fig.E1'
+    save_path = _SAVEFIG(PLOTPATH / (filename + '.png'), dpi=2067/6,
+        remove_alpha_channel=True, P_image=True, P_colors=256)
+    MANUSCRIPT_LABEL[save_path] = 'Fig.E1'
     plt.close()
-    MANUSCRIPT_LABEL[save] = 'Fig.E1'
 
 
     # Show that MIMICS's 14C implementation (Wang et al., 2021) doesn't work
@@ -403,10 +414,12 @@ if __name__ == '__main__': # if-condition necessary when multiprocessing
     plt.ylabel('$\Delta^{14}$C (‰)', size=12)
     plt.legend(loc='upper right')
     plt.tight_layout()
-    save = PLOTPATH / (filename + '.pdf')
-    plt.savefig(save)
+    save_path = _SAVEFIG(PLOTPATH / (filename + '.pdf'))
+    MANUSCRIPT_LABEL[save_path] = 'Fig.E2'
+    save_path = _SAVEFIG(PLOTPATH / (filename + '.png'), dpi=2067/6,
+        remove_alpha_channel=True, P_image=True, P_colors=64)
+    MANUSCRIPT_LABEL[save_path] = 'Fig.E2'
     plt.close()
-    MANUSCRIPT_LABEL[save] = 'Fig.E2'
 
 
     ###############################################################
@@ -438,7 +451,7 @@ if __name__ == '__main__': # if-condition necessary when multiprocessing
         zf.write(path, arc_file)
         return [(path, arc_file)]
 
-    archive = SAVEPATH / 'Supplementary_Material_for_associated_manuscript.zip'
+    archive = SAVEPATH / 'Materials for gmd-2023-242 paper.zip'
 
     with zipfile.ZipFile(archive, mode='w', compression=zipfile.ZIP_LZMA) as zf:
         added = add_to_zipfile(zf, TABLEPATH, '', 'Tab.S', rename='Tables')

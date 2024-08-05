@@ -43,7 +43,7 @@ def plot_data_vs_clay(environment=None, *args, **kwargs):
     )
     xticks = list(range(0, 55, 10))
     for ax in axes.flatten():
-        ax.set_xticks(xticks, [f'{k:.0f}%' for k in xticks])
+        ax.set_xticks(xticks, [f'{k:.0f}$\,$%' for k in xticks])
         ax.set_xlim((0,55))
     return fig, axes
 
@@ -65,7 +65,7 @@ def plot_data_vs_temperature(environment=None, *args, **kwargs):
     return fig, axes
 
 
-@_save_show_close   
+@_save_show_close
 def plot_data_vs_environment(environment, plot_type='predicted',
         predicted=None, observed=None, error=None, *, plot_soc_logscale=None,
         normalized_to_2000=False, xlabel='', figsize=(10,6)):
@@ -178,7 +178,7 @@ def plot_data_vs_environment(environment, plot_type='predicted',
             x = environment[y.index]
             #corr = scipy.stats.pearsonr(x,y)
             #print(f'{variable}: {model_name}: r={corr.statistic:.3f}, p={corr.pvalue:.3f}')
-            ax = scatter_plot(ax, x, y, color=f'C{i}', alpha=0.2, zorder=i+1)
+            ax = scatter_plot(ax, x, y, color=f'C{i}', markeredgecolor='none', alpha=0.2, zorder=i+1)
             ax = linregress_plot(
                 ax, x, y, color=f'C{i}', zorder=i+101, label=model_name,
                 logscale=plot_soc_logscale and variable=='soc',
@@ -192,7 +192,7 @@ def plot_data_vs_environment(environment, plot_type='predicted',
         else:
             ax.set_ylim(options[variable]['ylim'])
         if 'perc' in variable:
-            ax.set_yticks(ticks:=ax.get_yticks(), [f'{k:.0f}%' for k in ticks])
+            ax.set_yticks(ticks:=ax.get_yticks(), [f'{k:.0f}$\,$%' for k in ticks])
 
     axes[1,0].set_xlabel(xlabel, size=11)
     axes[1,1].set_xlabel(xlabel, size=11)
@@ -218,7 +218,7 @@ def plot_sampling_date_vs_clay(environment=None, *args, **kwargs):
         environment, *args, xlabel='clay content',
         show=False, close=False, **kwargs
     )
-    ax.set_xticks(ticks:=ax.get_xticks(), [f'{k:.0f}%' for k in ticks])
+    ax.set_xticks(ticks:=ax.get_xticks(), [f'{k:.0f}$\,$%' for k in ticks])
     ax.set_xlim((0,55))
     return fig, ax
 

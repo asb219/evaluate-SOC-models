@@ -168,13 +168,10 @@ class FileFromArchive(FileFrom):
             else:
                 logger.debug(f'Saved to "{extract_path}".')
 
-        try:
-            assert self.exists()
-        except AssertionError:
-            logger.exception(f'Extraction failed. File not found: {self}')
-            raise
-        else:
+        if self.exists():
             logger.success(f'Extraction successful. File found: {self}')
+        else:
+            raise FileNotFoundError(f'Extraction failed. File not found: {self}')
 
         return extract_path
 
@@ -263,13 +260,10 @@ class FileFromDownload(FileFrom):
         else:
             logger.debug(f'Saved to "{DL_path}".')
 
-        try:
-            assert self.exists()
-        except AssertionError:
-            logger.exception(f'Download failed. File not found: {self}')
-            raise
-        else:
+        if self.exists():
             logger.success(f'Download successful. File found: {self}')
+        else:
+            raise FileNotFoundError(f'Download failed. File not found: {self}')
 
         return DL_path
 
