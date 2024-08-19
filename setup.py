@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='evaluate-SOC-models',
-    version='0.2.0',
+    version='1.0.0',
     description='Evaluate new-gen SOC models with 14C',
     long_description='Evaluate the performance of new-generation soil organic'\
         ' carbon models with radiocarbon (14C) data of soil density fractions',

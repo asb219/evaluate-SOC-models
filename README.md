@@ -27,9 +27,9 @@ of model predictions with respect to the observed data from ISRaD.
 
 
 **Associated manuscript**:
-Brunmayr, A. S., Hagedorn, F., Moreno Duborgel, M., Minich, L. I., and Graven, H. D. (in review, 2024).
+Brunmayr, A. S., Hagedorn, F., Moreno Duborgel, M., Minich, L. I., and Graven, H. D. (2024).
 Radiocarbon analysis reveals underestimation of soil organic carbon persistence in new-generation soil models.
-_Geosci. Model Dev. Discuss._ [preprint]. DOI: [10.5194/gmd-2023-242](https://doi.org/10.5194/gmd-2023-242).
+_Geoscientific Model Development, 17_(15), 5961-5985. DOI: [10.5194/gmd-17-5961-2024](https://doi.org/10.5194/gmd-17-5961-2024).
 
 
 [^1]: Abramoff, R. Z., et al. (2022). Improved global-scale predictions of soil carbon stocks with Millennial Version 2.

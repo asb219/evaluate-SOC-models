@@ -428,6 +428,8 @@ if __name__ == '__main__': # if-condition necessary when multiprocessing
     ### CREATE SUPPLEMENTARY MATERIAL FOR ASSOCIATED MANUSCRIPT ###
     ###############################################################
 
+    # Associated manuscript: https://doi.org/10.5194/gmd-17-5961-2024
+
     # The quick and dirty way: Add all the files in TABLEPATH and PLOTPATH
     # to a compressed zip archive while labeling them as Tables and Figures
 
@@ -453,16 +455,8 @@ if __name__ == '__main__': # if-condition necessary when multiprocessing
         zf.write(path, arc_file)
         return [(path, arc_file)]
 
-    archive = SAVEPATH / 'Materials_for_gmd-2023-242_paper.zip'
+    archive = SAVEPATH / 'Materials_for_gmd-17-5961-2024.zip'
 
     with zipfile.ZipFile(archive, mode='w', compression=zipfile.ZIP_LZMA) as zf:
         added = add_to_zipfile(zf, TABLEPATH, '', 'Tab.S', rename='Tables')
         added += add_to_zipfile(zf, PLOTPATH, '', 'Fig.S', rename='Figures')
-
-    # archive_s = SAVEPATH / 'Supplement_for_gmd-2023-242_paper.zip'
-    #
-    # with zipfile.ZipFile(archive_s, mode='w', compression=zipfile.ZIP_LZMA) as zf_s:
-    #     with zipfile.ZipFile(archive, mode='r') as zf:
-    #         for info in zf.infolist():
-    #             if info.filename.startswith('Figures/Fig.S') or not info.filename.startswith('Figures/Fig.'):
-    #                 zf_s.writestr(info, zf.read(info))
